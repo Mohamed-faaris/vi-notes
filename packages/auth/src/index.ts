@@ -18,10 +18,12 @@ export const auth = betterAuth({
       );
     },
     sendOnSignUp: true,
+    sendOnSignIn: true,
   },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    autoSignIn: false,
   },
   plugins: [
     emailOTP({

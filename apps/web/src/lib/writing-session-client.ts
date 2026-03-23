@@ -68,3 +68,18 @@ export async function getUserSessions(userId: string) {
   const data = (await response.json()) as { sessions: SessionItem[] };
   return data.sessions;
 }
+
+export async function getSessionById(sessionId: string) {
+  const response = await fetch(`${env.VITE_SERVER_URL}/session/${sessionId}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Request failed (${response.status}): ${errorText}`);
+  }
+
+  const data = (await response.json()) as { session: SessionItem | null };
+  return data.session;
+}

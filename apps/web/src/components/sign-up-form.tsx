@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Button } from "@vi-notes/ui/components/button";
 import { Input } from "@vi-notes/ui/components/input";
 import { Label } from "@vi-notes/ui/components/label";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+export default function SignUpForm() {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
 
@@ -29,8 +29,8 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         },
         {
           onSuccess: () => {
-            navigate("/dashboard");
-            toast.success("Sign up successful");
+            navigate("/login");
+            toast.success("Account created. Verify your email before signing in.");
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
@@ -52,7 +52,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   }
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
+    <div className="mx-auto mt-10 w-full max-w-md rounded-lg border bg-card p-6">
       <h1 className="mb-6 text-center text-3xl font-bold">Create Account</h1>
 
       <form
@@ -143,13 +143,9 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       </form>
 
       <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignIn}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
+        <Link to="/login" className="text-sm text-primary underline-offset-4 hover:underline">
           Already have an account? Sign In
-        </Button>
+        </Link>
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import {
 
 import { Button } from "@vi-notes/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
+import { Link } from "react-router";
 
 import {
   endSession,
@@ -39,8 +40,55 @@ export function Editor({ userId }: EditorProps) {
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [sessionOptions, setSessionOptions] = useState<SessionItem[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const textRef = useRef(text);
+
+  async function closeCurrentSession() {
+    if (!sessionIdRef.current) {
+      return;
+    }
+
+    const sessionIdToClose = sessionIdRef.current;
+    const endedAt = Date.now();
+    const finalSnapshot = { t: endedAt, text: textRef.current };
+
+    await pushSessionSnapshot(sessionIdToClose, finalSnapshot).catch(() => undefined);
+    await endSession(sessionIdToClose, endedAt).catch(() => undefined);
+  }
+
+  async function createSession(resetEditor: boolean) {
+    const sessionId = crypto.randomUUID();
+    const startTime = Date.now();
+
+    if (resetEditor) {
+      setText("");
+      setEvents([]);
+      setSnapshots([]);
+      setLastEventTime(null);
+      setSelectedSessionId("");
+    }
+
+    sessionIdRef.current = sessionId;
+    setCurrentSessionId(sessionId);
+
+    setSessionOptions((prev) => [
+      {
+        sessionId,
+        userId,
+        startTime,
+        events: [],
+        snapshots: [],
+      },
+      ...prev,
+    ]);
+
+    await startSession(sessionId, userId, startTime).catch((error: Error) => {
+      setSessionError(error.message);
+    });
+  }
 
   useEffect(() => {
     textRef.current = text;
@@ -51,25 +99,10 @@ export function Editor({ userId }: EditorProps) {
       return;
     }
 
-    const sessionId = crypto.randomUUID();
-    const startTime = Date.now();
-
-    sessionIdRef.current = sessionId;
-    void startSession(sessionId, userId, startTime).catch((error: Error) => {
-      setSessionError(error.message);
-    });
+    void createSession(true);
 
     return () => {
-      if (!sessionIdRef.current) {
-        return;
-      }
-
-      const sessionIdToClose = sessionIdRef.current;
-      const endedAt = Date.now();
-
-      const finalSnapshot = { t: endedAt, text: textRef.current };
-      void pushSessionSnapshot(sessionIdToClose, finalSnapshot).catch(() => undefined);
-      void endSession(sessionIdToClose, endedAt).catch(() => undefined);
+      void closeCurrentSession();
     };
   }, [userId]);
 
@@ -241,17 +274,21 @@ export function Editor({ userId }: EditorProps) {
     }
     const lastSnapshot = selected.snapshots.at(-1)?.text ?? "";
     setText(lastSnapshot);
+    setEvents(selected.events ?? []);
+    setSnapshots(selected.snapshots ?? []);
   }
 
   function createNewSession() {
-    const sessionId = crypto.randomUUID();
-    const now = Date.now();
-    sessionIdRef.current = sessionId;
-    setSelectedSessionId("");
-    setText("");
-    setEvents([]);
-    setSnapshots([]);
-    void startSession(sessionId, userId, now).catch((error: Error) => setSessionError(error.message));
+    if (isCreatingSession) {
+      return;
+    }
+
+    setIsCreatingSession(true);
+    void closeCurrentSession()
+      .then(() => createSession(true))
+      .finally(() => {
+        setIsCreatingSession(false);
+      });
   }
 
   const visibleEvents = useMemo(() => {
@@ -259,38 +296,79 @@ export function Editor({ userId }: EditorProps) {
   }, [events]);
 
   return (
-    <div className="grid gap-4 p-4 md:grid-cols-2">
-      <Card>
+    <div className="flex flex-col gap-4 p-4 lg:flex-row">
+      <Card className="w-full lg:w-[320px] lg:shrink-0">
+        <CardHeader>
+          <CardTitle>Sessions</CardTitle>
+          <CardDescription>All writing sessions for this account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button type="button" className="mb-3 w-full" onClick={createNewSession} disabled={isCreatingSession}>
+            {isCreatingSession ? "Creating..." : "Create New Session"}
+          </Button>
+
+          <div className="max-h-[560px] space-y-2 overflow-auto pr-1">
+            {sessionOptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No sessions yet.</p>
+            ) : (
+              sessionOptions.map((session) => {
+                const isActive = session.sessionId === currentSessionId;
+                const isSelected = session.sessionId === selectedSessionId;
+
+                return (
+                  <button
+                    key={session.sessionId}
+                    type="button"
+                    onClick={() => loadOldSession(session.sessionId)}
+                    className={`w-full rounded border p-3 text-left transition-colors ${
+                      isActive
+                        ? "border-primary bg-primary/10"
+                        : isSelected
+                          ? "border-ring bg-muted/60"
+                          : "border-input hover:bg-muted/40"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{new Date(session.startTime).toLocaleString()}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">{session.sessionId}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {session.events.length} events · {session.snapshots.length} snapshots
+                    </p>
+                    <div className="mt-2">
+                      <Link
+                        to={`/dashboard/analyze/${session.sessionId}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                        }}
+                        className="text-xs text-primary underline-offset-4 hover:underline"
+                      >
+                        Analyze
+                      </Link>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid flex-1 gap-4 md:grid-cols-2">
+        <Card>
         <CardHeader>
           <CardTitle>Editor</CardTitle>
           <CardDescription>Write with markdown. Behavior events are captured as you type.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 flex flex-wrap items-end gap-2">
-            <div className="flex min-w-[240px] flex-1 flex-col gap-1">
-              <label htmlFor="session-select" className="text-xs text-muted-foreground">
-                Retrieve old session
-              </label>
-              <select
-                id="session-select"
-                value={selectedSessionId}
-                onChange={(event) => loadOldSession(event.target.value)}
-                className="h-8 border border-input bg-background px-2 text-xs"
-              >
-                <option value="">Current session</option>
-                {sessionOptions.map((session) => (
-                  <option key={session.sessionId} value={session.sessionId}>
-                    {new Date(session.startTime).toLocaleString()} - {session.sessionId.slice(0, 8)}
-                  </option>
-                ))}
-              </select>
-            </div>
             <Button type="button" variant="outline" onClick={createNewSession}>
-              Create Session
+              New Session
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setShowStats((value) => !value)}>
+              {showStats ? "Hide Stats" : "Show Stats"}
             </Button>
           </div>
           <div className="mb-3 text-xs text-muted-foreground">
-            Session: <span className="font-mono">{sessionIdRef.current ?? "initializing"}</span>
+            Session: <span className="font-mono">{currentSessionId ?? "initializing"}</span>
           </div>
           {sessionError && <p className="mb-3 text-xs text-red-600">Session error: {sessionError}</p>}
           <textarea
@@ -302,9 +380,9 @@ export function Editor({ userId }: EditorProps) {
             placeholder="Start writing your notes here..."
           />
         </CardContent>
-      </Card>
+        </Card>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>Markdown Preview</CardTitle>
           <CardDescription>Live preview of your current text.</CardDescription>
@@ -312,22 +390,27 @@ export function Editor({ userId }: EditorProps) {
         <CardContent>
           <Preview markdown={text} />
         </CardContent>
-      </Card>
+        </Card>
 
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <CardTitle>Captured Events</CardTitle>
-          <CardDescription>Showing latest {MAX_EVENTS_VISIBLE} events (newest first).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <pre className="max-h-72 overflow-auto border border-input bg-muted/30 p-3 text-xs">
-            {JSON.stringify(visibleEvents, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
+        {showStats ? (
+          <>
+            <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Captured Events</CardTitle>
+              <CardDescription>Showing latest {MAX_EVENTS_VISIBLE} events (newest first).</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="max-h-72 overflow-auto border border-input bg-muted/30 p-3 text-xs">
+                {JSON.stringify(visibleEvents, null, 2)}
+              </pre>
+            </CardContent>
+            </Card>
 
-      <div className="md:col-span-2">
-        <TeacherDashboard text={text} events={events} snapshots={snapshots} />
+            <div className="md:col-span-2">
+              <TeacherDashboard text={text} events={events} snapshots={snapshots} />
+            </div>
+          </>
+        ) : null}
       </div>
     </div>
   );

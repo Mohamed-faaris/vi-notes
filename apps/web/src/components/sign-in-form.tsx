@@ -2,8 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Button } from "@vi-notes/ui/components/button";
 import { Input } from "@vi-notes/ui/components/input";
 import { Label } from "@vi-notes/ui/components/label";
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
 
@@ -11,12 +10,17 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+function getAuthErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Unable to sign in. Please try again.";
+}
+
+export default function SignInForm() {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
-  const [emailForOtp, setEmailForOtp] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [magicEmail, setMagicEmail] = useState("");
 
   const form = useForm({
     defaultValues: {
@@ -35,7 +39,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
             toast.success("Sign in successful");
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            toast.error(error.error.message || error.error.statusText || getAuthErrorMessage(error));
           },
         },
       );
@@ -53,8 +57,9 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   }
 
   return (
-    <div className="mx-auto w-full mt-10 max-w-md p-6">
-      <h1 className="mb-6 text-center text-3xl font-bold">Welcome Back</h1>
+    <div className="mx-auto mt-10 w-full max-w-md rounded-lg border bg-card p-6">
+      <h1 className="mb-2 text-center text-3xl font-bold">Welcome Back</h1>
+      <p className="mb-6 text-center text-sm text-muted-foreground">Use your email and password to continue.</p>
 
       <form
         onSubmit={(e) => {
@@ -121,102 +126,19 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         </form.Subscribe>
       </form>
 
-      <div className="mt-6 space-y-4 border-t pt-4">
-        <div className="space-y-2">
-          <Label htmlFor="otp-email">Sign in with OTP</Label>
-          <Input
-            id="otp-email"
-            type="email"
-            placeholder="you@example.com"
-            value={emailForOtp}
-            onChange={(event) => setEmailForOtp(event.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={async () => {
-                await authClient.emailOtp.sendVerificationOtp(
-                  { email: emailForOtp, type: "sign-in" },
-                  {
-                    onSuccess: () => {
-                      toast.success("OTP sent to your email");
-                    },
-                    onError: (error) => {
-                      toast.error(error.error.message || error.error.statusText);
-                    },
-                  },
-                );
-              }}
-            >
-              Send OTP
-            </Button>
-            <Input
-              placeholder="Enter OTP"
-              value={otpCode}
-              onChange={(event) => setOtpCode(event.target.value)}
-            />
-            <Button
-              type="button"
-              onClick={async () => {
-                await authClient.signIn.emailOtp(
-                  { email: emailForOtp, otp: otpCode },
-                  {
-                    onSuccess: () => {
-                      toast.success("Signed in with OTP");
-                      navigate("/dashboard");
-                    },
-                    onError: (error) => {
-                      toast.error(error.error.message || error.error.statusText);
-                    },
-                  },
-                );
-              }}
-            >
-              Verify OTP
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="magic-email">Sign in with magic link</Label>
-          <Input
-            id="magic-email"
-            type="email"
-            placeholder="you@example.com"
-            value={magicEmail}
-            onChange={(event) => setMagicEmail(event.target.value)}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              await authClient.signIn.magicLink(
-                { email: magicEmail, callbackURL: "/dashboard" },
-                {
-                  onSuccess: () => {
-                    toast.success("Magic link sent");
-                  },
-                  onError: (error) => {
-                    toast.error(error.error.message || error.error.statusText);
-                  },
-                },
-              );
-            }}
-          >
-            Send Magic Link
-          </Button>
-        </div>
+      <div className="mt-6 grid gap-2 text-sm">
+        <Link to="/login/otp" className="text-primary underline-offset-4 hover:underline">
+          Sign in with one-time code (OTP)
+        </Link>
+        <Link to="/login/magic-link" className="text-primary underline-offset-4 hover:underline">
+          Sign in with magic link
+        </Link>
       </div>
 
       <div className="mt-4 text-center">
-        <Button
-          variant="link"
-          onClick={onSwitchToSignUp}
-          className="text-indigo-600 hover:text-indigo-800"
-        >
+        <Link to="/login/signup" className="text-sm text-primary underline-offset-4 hover:underline">
           Need an account? Sign Up
-        </Button>
+        </Link>
       </div>
     </div>
   );
