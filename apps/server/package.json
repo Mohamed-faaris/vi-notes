@@ -24,6 +24,7 @@
     "@types/bun": "catalog:",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
+    "@types/nodemailer": "^6.4.17",
     "@vi-notes/config": "workspace:*",
     "tsdown": "^0.16.5",
     "typescript": "^5"

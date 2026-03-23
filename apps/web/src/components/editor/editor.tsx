@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 
+import { Button } from "@vi-notes/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
 
 import { endSession, pushSessionEvent, pushSessionSnapshot, startSession } from "@/lib/writing-session-client";
@@ -23,14 +24,25 @@ type EditorProps = {
   userId: string;
 };
 
+type Html2PdfWorker = {
+  set: (options: Record<string, unknown>) => Html2PdfWorker;
+  from: (source: HTMLElement) => Html2PdfWorker;
+  save: () => Promise<void>;
+};
+
+type Html2PdfFactory = () => Html2PdfWorker;
+
 export function Editor({ userId }: EditorProps) {
   const [text, setText] = useState("");
   const [events, setEvents] = useState<EditorEvent[]>([]);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [lastEventTime, setLastEventTime] = useState<number | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const textRef = useRef(text);
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     textRef.current = text;
@@ -209,6 +221,35 @@ export function Editor({ userId }: EditorProps) {
     setText(event.target.value);
   }
 
+  async function handleExportPdf() {
+    if (!previewRef.current) {
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      const module = await import("html2pdf.js");
+      const html2pdf = ((module as { default?: Html2PdfFactory }).default ?? module) as Html2PdfFactory;
+
+      await html2pdf()
+        .set({
+          margin: 10,
+          filename: "markdown-preview.pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        })
+        .from(previewRef.current)
+        .save();
+    } catch {
+      setExportError("Failed to export PDF. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   const visibleEvents = useMemo(() => {
     return events.slice(-MAX_EVENTS_VISIBLE).reverse();
   }, [events]);
@@ -238,11 +279,19 @@ export function Editor({ userId }: EditorProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Markdown Preview</CardTitle>
-          <CardDescription>Live preview of your current text.</CardDescription>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle>Markdown Preview</CardTitle>
+              <CardDescription>Live preview of your current text.</CardDescription>
+            </div>
+            <Button variant="outline" onClick={handleExportPdf} disabled={isExporting || !text.trim()}>
+              {isExporting ? "Exporting..." : "Export PDF"}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <Preview markdown={text} />
+          {exportError && <p className="mb-3 text-xs text-red-600">{exportError}</p>}
+          <Preview ref={previewRef} markdown={text} />
         </CardContent>
       </Card>
 
