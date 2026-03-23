@@ -1,0 +1,3 @@
+{
+  "extends": "@vi-notes/config/tsconfig.base.json"
+}

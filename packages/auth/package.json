@@ -1,0 +1,24 @@
+{
+  "name": "@vi-notes/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@vi-notes/db": "workspace:*",
+    "@vi-notes/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@vi-notes/config": "workspace:*",
+    "typescript": "^5"
+  }
+}
