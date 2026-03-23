@@ -11,7 +11,14 @@ import {
 import { Button } from "@vi-notes/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
 
-import { endSession, pushSessionEvent, pushSessionSnapshot, startSession } from "@/lib/writing-session-client";
+import {
+  endSession,
+  getUserSessions,
+  pushSessionEvent,
+  pushSessionSnapshot,
+  startSession,
+  type SessionItem,
+} from "@/lib/writing-session-client";
 
 import { buildEditorEvent } from "./capture";
 import { Preview } from "./preview";
@@ -24,25 +31,16 @@ type EditorProps = {
   userId: string;
 };
 
-type Html2PdfWorker = {
-  set: (options: Record<string, unknown>) => Html2PdfWorker;
-  from: (source: HTMLElement) => Html2PdfWorker;
-  save: () => Promise<void>;
-};
-
-type Html2PdfFactory = () => Html2PdfWorker;
-
 export function Editor({ userId }: EditorProps) {
   const [text, setText] = useState("");
   const [events, setEvents] = useState<EditorEvent[]>([]);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [lastEventTime, setLastEventTime] = useState<number | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [sessionOptions, setSessionOptions] = useState<SessionItem[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const sessionIdRef = useRef<string | null>(null);
   const textRef = useRef(text);
-  const previewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     textRef.current = text;
@@ -95,6 +93,20 @@ export function Editor({ userId }: EditorProps) {
       window.clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    if (!userId || userId === "anonymous") {
+      return;
+    }
+
+    void getUserSessions(userId)
+      .then((sessions) => {
+        setSessionOptions(sessions);
+      })
+      .catch(() => {
+        setSessionOptions([]);
+      });
+  }, [userId]);
 
   function pushEvent(event: EditorEvent) {
     setEvents((prev) => [...prev, event]);
@@ -221,33 +233,25 @@ export function Editor({ userId }: EditorProps) {
     setText(event.target.value);
   }
 
-  async function handleExportPdf() {
-    if (!previewRef.current) {
+  function loadOldSession(sessionId: string) {
+    setSelectedSessionId(sessionId);
+    const selected = sessionOptions.find((session) => session.sessionId === sessionId);
+    if (!selected) {
       return;
     }
+    const lastSnapshot = selected.snapshots.at(-1)?.text ?? "";
+    setText(lastSnapshot);
+  }
 
-    setIsExporting(true);
-    setExportError(null);
-
-    try {
-      const module = await import("html2pdf.js");
-      const html2pdf = ((module as { default?: Html2PdfFactory }).default ?? module) as Html2PdfFactory;
-
-      await html2pdf()
-        .set({
-          margin: 10,
-          filename: "markdown-preview.pdf",
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        })
-        .from(previewRef.current)
-        .save();
-    } catch {
-      setExportError("Failed to export PDF. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
+  function createNewSession() {
+    const sessionId = crypto.randomUUID();
+    const now = Date.now();
+    sessionIdRef.current = sessionId;
+    setSelectedSessionId("");
+    setText("");
+    setEvents([]);
+    setSnapshots([]);
+    void startSession(sessionId, userId, now).catch((error: Error) => setSessionError(error.message));
   }
 
   const visibleEvents = useMemo(() => {
@@ -262,6 +266,29 @@ export function Editor({ userId }: EditorProps) {
           <CardDescription>Write with markdown. Behavior events are captured as you type.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <div className="flex min-w-[240px] flex-1 flex-col gap-1">
+              <label htmlFor="session-select" className="text-xs text-muted-foreground">
+                Retrieve old session
+              </label>
+              <select
+                id="session-select"
+                value={selectedSessionId}
+                onChange={(event) => loadOldSession(event.target.value)}
+                className="h-8 border border-input bg-background px-2 text-xs"
+              >
+                <option value="">Current session</option>
+                {sessionOptions.map((session) => (
+                  <option key={session.sessionId} value={session.sessionId}>
+                    {new Date(session.startTime).toLocaleString()} - {session.sessionId.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button type="button" variant="outline" onClick={createNewSession}>
+              Create Session
+            </Button>
+          </div>
           <div className="mb-3 text-xs text-muted-foreground">
             Session: <span className="font-mono">{sessionIdRef.current ?? "initializing"}</span>
           </div>
@@ -279,19 +306,11 @@ export function Editor({ userId }: EditorProps) {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Markdown Preview</CardTitle>
-              <CardDescription>Live preview of your current text.</CardDescription>
-            </div>
-            <Button variant="outline" onClick={handleExportPdf} disabled={isExporting || !text.trim()}>
-              {isExporting ? "Exporting..." : "Export PDF"}
-            </Button>
-          </div>
+          <CardTitle>Markdown Preview</CardTitle>
+          <CardDescription>Live preview of your current text.</CardDescription>
         </CardHeader>
         <CardContent>
-          {exportError && <p className="mb-3 text-xs text-red-600">{exportError}</p>}
-          <Preview ref={previewRef} markdown={text} />
+          <Preview markdown={text} />
         </CardContent>
       </Card>
 

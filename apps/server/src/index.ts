@@ -157,6 +157,15 @@ app.get("/session/:id", async (req, res) => {
   return res.status(200).json({ session });
 });
 
+app.get("/session/user/:userId", async (req, res) => {
+  const sessions = await WritingSession.find({ userId: req.params.userId })
+    .sort({ startTime: -1 })
+    .limit(50)
+    .lean();
+
+  return res.status(200).json({ sessions });
+});
+
 app.get("/session/:id/analysis", async (req, res) => {
   const session = await WritingSession.findOne({ sessionId: req.params.id }).lean();
 

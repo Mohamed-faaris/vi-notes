@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { Button } from "@vi-notes/ui/components/button";
 import { Input } from "@vi-notes/ui/components/input";
 import { Label } from "@vi-notes/ui/components/label";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
@@ -13,6 +14,9 @@ import Loader from "./loader";
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
+  const [emailForOtp, setEmailForOtp] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [magicEmail, setMagicEmail] = useState("");
 
   const form = useForm({
     defaultValues: {
@@ -116,6 +120,94 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           )}
         </form.Subscribe>
       </form>
+
+      <div className="mt-6 space-y-4 border-t pt-4">
+        <div className="space-y-2">
+          <Label htmlFor="otp-email">Sign in with OTP</Label>
+          <Input
+            id="otp-email"
+            type="email"
+            placeholder="you@example.com"
+            value={emailForOtp}
+            onChange={(event) => setEmailForOtp(event.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                await authClient.emailOtp.sendVerificationOtp(
+                  { email: emailForOtp, type: "sign-in" },
+                  {
+                    onSuccess: () => {
+                      toast.success("OTP sent to your email");
+                    },
+                    onError: (error) => {
+                      toast.error(error.error.message || error.error.statusText);
+                    },
+                  },
+                );
+              }}
+            >
+              Send OTP
+            </Button>
+            <Input
+              placeholder="Enter OTP"
+              value={otpCode}
+              onChange={(event) => setOtpCode(event.target.value)}
+            />
+            <Button
+              type="button"
+              onClick={async () => {
+                await authClient.signIn.emailOtp(
+                  { email: emailForOtp, otp: otpCode },
+                  {
+                    onSuccess: () => {
+                      toast.success("Signed in with OTP");
+                      navigate("/dashboard");
+                    },
+                    onError: (error) => {
+                      toast.error(error.error.message || error.error.statusText);
+                    },
+                  },
+                );
+              }}
+            >
+              Verify OTP
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="magic-email">Sign in with magic link</Label>
+          <Input
+            id="magic-email"
+            type="email"
+            placeholder="you@example.com"
+            value={magicEmail}
+            onChange={(event) => setMagicEmail(event.target.value)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              await authClient.signIn.magicLink(
+                { email: magicEmail, callbackURL: "/dashboard" },
+                {
+                  onSuccess: () => {
+                    toast.success("Magic link sent");
+                  },
+                  onError: (error) => {
+                    toast.error(error.error.message || error.error.statusText);
+                  },
+                },
+              );
+            }}
+          >
+            Send Magic Link
+          </Button>
+        </div>
+      </div>
 
       <div className="mt-4 text-center">
         <Button

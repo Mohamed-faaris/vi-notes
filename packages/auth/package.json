@@ -15,9 +15,11 @@
     "@vi-notes/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "nodemailer": "^6.10.1",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
     "@vi-notes/config": "workspace:*",
     "typescript": "^5"
   }
