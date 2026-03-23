@@ -4,21 +4,25 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     tailwindcss(),
     reactRouter(),
     tsconfigPaths(),
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "vi-notes",
-        short_name: "vi-notes",
-        description: "vi-notes - PWA Application",
-        theme_color: "#0c0c0c",
-      },
-      pwaAssets: { disabled: false, config: true },
-      devOptions: { enabled: true },
-    }),
+    ...(mode === "production"
+      ? [
+          VitePWA({
+            registerType: "autoUpdate",
+            manifest: {
+              name: "vi-notes",
+              short_name: "vi-notes",
+              description: "vi-notes - PWA Application",
+              theme_color: "#0c0c0c",
+            },
+            pwaAssets: { disabled: false, config: true },
+            devOptions: { enabled: false },
+          }),
+        ]
+      : []),
   ],
-});
+}));

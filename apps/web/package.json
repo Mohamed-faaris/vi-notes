@@ -24,6 +24,7 @@
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-markdown": "^10.1.0",
     "react-router": "^7.10.1",
     "sonner": "catalog:",
     "vite-plugin-pwa": "^1.0.1",
