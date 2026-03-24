@@ -5,6 +5,7 @@ import { useOutletContext, useParams } from "react-router";
 
 import { buildEditorEvent } from "@/components/editor/capture";
 import { Preview } from "@/components/editor/preview";
+import { RichEditor } from "@/components/editor/rich-editor";
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
 import { endNote, getNote, pushNoteEvent, pushNoteSnapshot } from "@/lib/notes-client";
 import { useTelemetryFlush } from "@/hooks/use-telemetry-flush";
@@ -16,6 +17,7 @@ export default function DashboardNoteRoute() {
   const { refreshNotes } = useOutletContext<DashboardOutletContext>();
   const [text, setText] = useState("");
   const [events, setEvents] = useState<EditorEvent[]>([]);
+  const [dirtyText, setDirtyText] = useState("");
   const [lastEventTime, setLastEventTime] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,10 @@ export default function DashboardNoteRoute() {
   useEffect(() => {
     textRef.current = text;
   }, [text]);
+
+  useEffect(() => {
+    textRef.current = dirtyText || text;
+  }, [dirtyText, text]);
 
   useEffect(() => {
     if (!id) {
@@ -133,82 +139,27 @@ export default function DashboardNoteRoute() {
           <CardTitle>Editor</CardTitle>
           <CardDescription>{contentLength} characters</CardDescription>
         </CardHeader>
-        <CardContent className="h-[calc(100%-72px)]">
-          <textarea
+        <CardContent className="h-[calc(100%-72px)] overflow-auto p-0">
+          <RichEditor
             value={text}
-            onChange={(event) => {
-              const next = event.target.value;
+            onChange={(next) => {
               setText(next);
-            }}
-            onKeyDown={(event) => {
-              const target = event.currentTarget;
-              const selectionStart = target.selectionStart;
-              const selectionEnd = target.selectionEnd;
-              const now = Date.now();
-              const hasSelection = selectionEnd > selectionStart;
-
-              if (!event.ctrlKey && !event.metaKey && !event.altKey && event.key.length === 1) {
-                const captured = buildEditorEvent({
-                  type: "insert",
-                  now,
-                  lastEventTime,
-                  start: selectionStart,
-                  end: selectionStart + 1,
-                  length: 1,
-                  delta: 1,
-                });
-
-                setEvents((prev) => [...prev, captured]);
-                setLastEventTime(now);
-                telemetry.push(captured);
-                return;
-              }
-
-              if (event.key === "Backspace" || event.key === "Delete") {
-                const deleteLength = hasSelection ? selectionEnd - selectionStart : 1;
-                const start = event.key === "Backspace" && !hasSelection ? Math.max(0, selectionStart - 1) : selectionStart;
-                const end = hasSelection ? selectionEnd : selectionStart + 1;
-
-                if (deleteLength <= 0) {
-                  return;
-                }
-
-                const captured = buildEditorEvent({
-                  type: "delete",
-                  now,
-                  lastEventTime,
-                  start,
-                  end,
-                  length: deleteLength,
-                  delta: -deleteLength,
-                });
-
-                setEvents((prev) => [...prev, captured]);
-                setLastEventTime(now);
-                telemetry.push(captured);
-              }
-            }}
-            onPaste={(event) => {
-              const pastedText = event.clipboardData.getData("text");
-              const target = event.currentTarget;
-              const selectionStart = target.selectionStart;
+              setDirtyText(next);
               const now = Date.now();
               const captured = buildEditorEvent({
-                type: "paste",
+                type: "insert",
                 now,
                 lastEventTime,
-                start: selectionStart,
-                end: selectionStart + pastedText.length,
-                length: pastedText.length,
-                delta: pastedText.length,
+                start: 0,
+                end: next.length,
+                length: next.length,
+                delta: next.length - text.length,
               });
 
               setEvents((prev) => [...prev, captured]);
               setLastEventTime(now);
               telemetry.push(captured);
             }}
-            className="h-full min-h-[60svh] w-full resize-none rounded border border-input bg-background p-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
-            placeholder="Write your markdown notes here..."
           />
         </CardContent>
       </Card>
