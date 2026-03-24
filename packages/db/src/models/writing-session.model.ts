@@ -20,6 +20,7 @@ type SessionSnapshot = {
 type WritingSessionDocument = {
   sessionId: string;
   userId: string;
+  title: string;
   events: WritingEvent[];
   snapshots: SessionSnapshot[];
   startTime: number;
@@ -51,6 +52,7 @@ const writingSessionSchema = new Schema(
   {
     sessionId: { type: String, required: true, unique: true, index: true },
     userId: { type: String, required: true, index: true },
+    title: { type: String, required: true, trim: true, default: "New Note" },
     events: { type: [writingEventSchema], default: [] },
     snapshots: { type: [snapshotSchema], default: [] },
     startTime: { type: Number, required: true },

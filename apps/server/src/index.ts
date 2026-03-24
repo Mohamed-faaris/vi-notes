@@ -13,7 +13,7 @@ const app = express();
 app.use(
   cors({
     origin: env.CORS_ORIGIN,
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   }),
@@ -38,142 +38,256 @@ const snapshotSchema = z.object({
   text: z.string(),
 });
 
-const startSessionSchema = z.object({
-  sessionId: z.string().min(1),
-  userId: z.string().min(1),
-  startTime: z.number().int().positive(),
+const createNoteSchema = z.object({
+  title: z.string().trim().min(1).max(120).optional(),
 });
 
-const sessionEventSchema = z.object({
-  sessionId: z.string().min(1),
+const renameNoteSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+});
+
+const noteEventSchema = z.object({
   event: editorEventSchema,
 });
 
-const sessionSnapshotSchema = z.object({
-  sessionId: z.string().min(1),
+const noteSnapshotSchema = z.object({
   snapshot: snapshotSchema,
 });
 
-const endSessionSchema = z.object({
-  sessionId: z.string().min(1),
+const endNoteSchema = z.object({
   endTime: z.number().int().positive(),
 });
 
-app.post("/session/start", async (req, res) => {
-  const parsed = startSessionSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten() });
+async function getServerSession(request: express.Request) {
+  const headers = new Headers();
+  const cookie = request.headers.cookie;
+  if (cookie) {
+    headers.set("cookie", cookie);
   }
 
-  const { sessionId, userId, startTime } = parsed.data;
+  const result = await auth.api.getSession({ headers });
+  return result;
+}
 
-  await WritingSession.findOneAndUpdate(
-    { sessionId },
-    {
-      $setOnInsert: {
-        sessionId,
-        userId,
-        startTime,
-        events: [],
-        snapshots: [],
-      },
-    },
-    { upsert: true, new: true },
-  );
+async function requireUser(request: express.Request, response: express.Response) {
+  const session = await getServerSession(request);
+  if (!session) {
+    response.status(401).json({ error: "Unauthorized" });
+    return null;
+  }
+  return session;
+}
 
-  return res.status(201).json({ ok: true, sessionId });
+async function requireAdmin(request: express.Request, response: express.Response) {
+  const session = await requireUser(request, response);
+  if (!session) {
+    return null;
+  }
+
+  const role = ((session.user as Record<string, unknown>).role ?? "user") as string;
+  if (role !== "admin") {
+    response.status(403).json({ error: "Forbidden" });
+    return null;
+  }
+
+  return session;
+}
+
+app.get("/notes", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
+
+  const notes = await WritingSession.find({ userId: session.user.id })
+    .select({ sessionId: 1, userId: 1, title: 1, startTime: 1, endTime: 1, createdAt: 1, updatedAt: 1 })
+    .sort({ updatedAt: -1 })
+    .lean();
+
+  return res.status(200).json({ notes });
 });
 
-app.post("/session/event", async (req, res) => {
-  const parsed = sessionEventSchema.safeParse(req.body);
+app.post("/notes", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
 
+  const parsed = createNoteSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { sessionId, event } = parsed.data;
+  const sessionId = crypto.randomUUID();
+  const startTime = Date.now();
+  const title = parsed.data.title ?? "New Note";
 
-  const updated = await WritingSession.findOneAndUpdate(
-    { sessionId },
-    { $push: { events: event } },
-    { new: true },
-  );
+  await WritingSession.create({
+    sessionId,
+    userId: session.user.id,
+    title,
+    startTime,
+    events: [],
+    snapshots: [],
+  });
 
-  if (!updated) {
-    return res.status(404).json({ error: "Session not found" });
-  }
-
-  return res.status(201).json({ ok: true });
+  return res.status(201).json({ sessionId, title, startTime });
 });
 
-app.post("/session/snapshot", async (req, res) => {
-  const parsed = sessionSnapshotSchema.safeParse(req.body);
-
-  if (!parsed.success) {
-    return res.status(400).json({ error: parsed.error.flatten() });
+app.get("/notes/:id", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
   }
 
-  const { sessionId, snapshot } = parsed.data;
-
-  const updated = await WritingSession.findOneAndUpdate(
-    { sessionId },
-    { $push: { snapshots: snapshot } },
-    { new: true },
-  );
-
-  if (!updated) {
-    return res.status(404).json({ error: "Session not found" });
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Note not found" });
   }
 
-  return res.status(201).json({ ok: true });
+  if (note.userId !== session.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  return res.status(200).json({ note });
 });
 
-app.post("/session/end", async (req, res) => {
-  const parsed = endSessionSchema.safeParse(req.body);
+app.patch("/notes/:id/title", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
 
+  const parsed = renameNoteSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
 
-  const { sessionId, endTime } = parsed.data;
-
-  const updated = await WritingSession.findOneAndUpdate({ sessionId }, { $set: { endTime } }, { new: true });
-
-  if (!updated) {
-    return res.status(404).json({ error: "Session not found" });
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Note not found" });
   }
 
+  if (note.userId !== session.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  await WritingSession.updateOne({ sessionId: req.params.id }, { $set: { title: parsed.data.title } });
   return res.status(200).json({ ok: true });
 });
 
-app.get("/session/:id", async (req, res) => {
-  const session = await WritingSession.findOne({ sessionId: req.params.id }).lean();
-
+app.post("/notes/:id/event", async (req, res) => {
+  const session = await requireUser(req, res);
   if (!session) {
-    return res.status(404).json({ error: "Session not found" });
+    return;
   }
 
-  return res.status(200).json({ session });
+  const parsed = noteEventSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Note not found" });
+  }
+
+  if (note.userId !== session.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  await WritingSession.updateOne({ sessionId: req.params.id }, { $push: { events: parsed.data.event } });
+  return res.status(201).json({ ok: true });
 });
 
-app.get("/session/user/:userId", async (req, res) => {
-  const sessions = await WritingSession.find({ userId: req.params.userId })
-    .sort({ startTime: -1 })
-    .limit(50)
+app.post("/notes/:id/snapshot", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
+
+  const parsed = noteSnapshotSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Note not found" });
+  }
+
+  if (note.userId !== session.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  await WritingSession.updateOne({ sessionId: req.params.id }, { $push: { snapshots: parsed.data.snapshot } });
+  return res.status(201).json({ ok: true });
+});
+
+app.post("/notes/:id/end", async (req, res) => {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
+
+  const parsed = endNoteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Note not found" });
+  }
+
+  if (note.userId !== session.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  await WritingSession.updateOne({ sessionId: req.params.id }, { $set: { endTime: parsed.data.endTime } });
+  return res.status(200).json({ ok: true });
+});
+
+app.get("/admin/sessions", async (req, res) => {
+  const session = await requireAdmin(req, res);
+  if (!session) {
+    return;
+  }
+
+  const sessions = await WritingSession.find({})
+    .select({ sessionId: 1, userId: 1, title: 1, startTime: 1, endTime: 1, createdAt: 1, updatedAt: 1 })
+    .sort({ updatedAt: -1 })
     .lean();
 
   return res.status(200).json({ sessions });
 });
 
-app.get("/session/:id/analysis", async (req, res) => {
-  const session = await WritingSession.findOne({ sessionId: req.params.id }).lean();
-
+app.get("/admin/sessions/:id", async (req, res) => {
+  const session = await requireAdmin(req, res);
   if (!session) {
+    return;
+  }
+
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
     return res.status(404).json({ error: "Session not found" });
   }
 
-  const analysis = analyzeSession(session.events, session.snapshots);
+  return res.status(200).json({ session: note });
+});
+
+app.get("/admin/sessions/:id/analysis", async (req, res) => {
+  const session = await requireAdmin(req, res);
+  if (!session) {
+    return;
+  }
+
+  const note = await WritingSession.findOne({ sessionId: req.params.id }).lean();
+  if (!note) {
+    return res.status(404).json({ error: "Session not found" });
+  }
+
+  const analysis = analyzeSession(note.events, note.snapshots);
   return res.status(200).json({ sessionId: req.params.id, ...analysis });
 });
 

@@ -9,6 +9,15 @@ import { sendAuthEmail } from "./mailer";
 export const auth = betterAuth({
   database: mongodbAdapter(client),
   trustedOrigins: [env.CORS_ORIGIN],
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: true,
+        defaultValue: "user",
+      },
+    },
+  },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       await sendAuthEmail(
