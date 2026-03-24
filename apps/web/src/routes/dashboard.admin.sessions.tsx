@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
-import { Link } from "react-router";
+import { Link, Outlet } from "react-router";
 
 import { listAdminSessions, type AdminSessionItem } from "@/lib/notes-client";
 
@@ -11,17 +11,22 @@ export default function AdminSessionsRoute() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("[admin-sessions] loading list");
     void listAdminSessions()
       .then((data) => {
+        console.log("[admin-sessions] loaded", data.length, "sessions");
         setSessions(data);
       })
       .catch((loadError: Error) => {
+        console.error("[admin-sessions] failed to load", loadError);
         setError(loadError.message);
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
+
+  console.log("[admin-sessions] render", { loading, error, count: sessions.length });
 
   if (loading) {
     return <div className="p-6">Loading admin sessions...</div>;
@@ -32,7 +37,7 @@ export default function AdminSessionsRoute() {
   }
 
   return (
-    <div className="p-4">
+    <div className="grid gap-4 p-4 xl:grid-cols-[360px_1fr]">
       <Card>
         <CardHeader>
           <CardTitle>Admin: All Sessions</CardTitle>
@@ -53,6 +58,8 @@ export default function AdminSessionsRoute() {
           </div>
         </CardContent>
       </Card>
+
+      <Outlet />
     </div>
   );
 }

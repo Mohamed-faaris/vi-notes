@@ -30,16 +30,22 @@ export default function DashboardLayout() {
 
   async function refreshNotes() {
     try {
+      console.log("[dashboard] loading notes for session", session?.user?.id);
       const data = await listNotes();
+      console.log("[dashboard] loaded notes", data.length);
       setNotes(data);
     } catch (error) {
+      console.error("[dashboard] failed to load notes", error);
       const message = error instanceof Error ? error.message : "Failed to load notes";
       toast.error(message);
     }
   }
 
+  console.log("[dashboard] render", { loading: isPending, notes: notes.length, activeId, path: location.pathname });
+
   useEffect(() => {
     if (!session && !isPending) {
+      console.warn("[dashboard] no session, redirecting to login");
       navigate("/login");
       return;
     }
@@ -50,10 +56,11 @@ export default function DashboardLayout() {
   }, [session, isPending, navigate]);
 
   useEffect(() => {
-    if (!activeId && notes.length > 0) {
+    const isDashboardRoot = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+    if (isDashboardRoot && !activeId && notes.length > 0) {
       navigate(`/dashboard/notes/${notes[0]?.sessionId}`);
     }
-  }, [activeId, notes, navigate]);
+  }, [activeId, notes, navigate, location.pathname]);
 
   async function handleCreateNote() {
     setIsCreating(true);
