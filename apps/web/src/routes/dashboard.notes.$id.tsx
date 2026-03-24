@@ -7,6 +7,7 @@ import { buildEditorEvent } from "@/components/editor/capture";
 import { Preview } from "@/components/editor/preview";
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
 import { endNote, getNote, pushNoteEvent, pushNoteSnapshot } from "@/lib/notes-client";
+import { useTelemetryFlush } from "@/hooks/use-telemetry-flush";
 
 import type { DashboardOutletContext } from "./dashboard-context";
 
@@ -19,6 +20,52 @@ export default function DashboardNoteRoute() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const textRef = useRef(text);
+
+  const telemetry = useTelemetryFlush<EditorEvent>({
+    debounceMs: 1000,
+    maxBuffer: 50,
+    intervalMs: 5000,
+    onFlush: async (batch) => {
+      await Promise.all(batch.map((event) => (id ? pushNoteEvent(id, event) : Promise.resolve())));
+    },
+  });
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    const handleSnapshot = () => {
+      const snapshot: Snapshot = { t: Date.now(), text: textRef.current };
+      void pushNoteSnapshot(id, snapshot)
+        .then(() => refreshNotes())
+        .catch(() => undefined);
+    };
+
+    const handleBlur = () => {
+      handleSnapshot();
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        handleSnapshot();
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      handleSnapshot();
+    };
+
+    window.addEventListener("blur", handleBlur);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [id, refreshNotes]);
 
   useEffect(() => {
     textRef.current = text;
@@ -65,8 +112,9 @@ export default function DashboardNoteRoute() {
         .catch(() => undefined);
       void endNote(id, endTime).catch(() => undefined);
       window.clearInterval(interval);
+      telemetry.flush().catch(() => undefined);
     };
-  }, [id, refreshNotes]);
+  }, [id, refreshNotes, telemetry]);
 
   const contentLength = useMemo(() => text.trim().length, [text]);
 
@@ -112,9 +160,7 @@ export default function DashboardNoteRoute() {
 
                 setEvents((prev) => [...prev, captured]);
                 setLastEventTime(now);
-                if (id) {
-                  void pushNoteEvent(id, captured).catch(() => undefined);
-                }
+                telemetry.push(captured);
                 return;
               }
 
@@ -139,9 +185,7 @@ export default function DashboardNoteRoute() {
 
                 setEvents((prev) => [...prev, captured]);
                 setLastEventTime(now);
-                if (id) {
-                  void pushNoteEvent(id, captured).catch(() => undefined);
-                }
+                telemetry.push(captured);
               }
             }}
             onPaste={(event) => {
@@ -161,9 +205,7 @@ export default function DashboardNoteRoute() {
 
               setEvents((prev) => [...prev, captured]);
               setLastEventTime(now);
-              if (id) {
-                void pushNoteEvent(id, captured).catch(() => undefined);
-              }
+              telemetry.push(captured);
             }}
             className="h-full min-h-[60svh] w-full resize-none rounded border border-input bg-background p-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
             placeholder="Write your markdown notes here..."
