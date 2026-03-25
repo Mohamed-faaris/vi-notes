@@ -10,14 +10,13 @@
     "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
+    "@blocknote/core": "^0.47.2",
+    "@blocknote/mantine": "^0.47.2",
+    "@blocknote/react": "^0.47.2",
     "@react-router/fs-routes": "^7.10.1",
     "@react-router/node": "^7.10.1",
     "@react-router/serve": "^7.10.1",
     "@tanstack/react-form": "^1.28.0",
-    "@tiptap/extension-placeholder": "^3.20.5",
-    "@tiptap/extension-typography": "^3.20.5",
-    "@tiptap/react": "^3.20.5",
-    "@tiptap/starter-kit": "^3.20.5",
     "@vi-notes/auth": "workspace:*",
     "@vi-notes/env": "workspace:*",
     "@vi-notes/ui": "workspace:*",
@@ -32,7 +31,6 @@
     "react-dom": "catalog:",
     "react-router": "^7.10.1",
     "sonner": "catalog:",
-    "tiptap-markdown": "^0.9.0",
     "vite-plugin-pwa": "^1.0.1",
     "zod": "catalog:"
   },

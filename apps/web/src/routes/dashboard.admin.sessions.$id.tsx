@@ -74,6 +74,11 @@ export default function AdminSessionDetailRoute() {
         <CardContent>
           <Preview markdown={text} />
         </CardContent>
+        <CardContent>
+          <p>
+            {text}
+          </p>
+        </CardContent>
       </Card>
 
       <TeacherDashboard text={text} events={events} snapshots={snapshots} />

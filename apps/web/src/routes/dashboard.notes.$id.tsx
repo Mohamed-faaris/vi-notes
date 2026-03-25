@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
 import { useOutletContext, useParams } from "react-router";
 
 import { buildEditorEvent } from "@/components/editor/capture";
-import { Preview } from "@/components/editor/preview";
 import { RichEditor } from "@/components/editor/rich-editor";
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
 import { endNote, getNote, pushNoteEvent, pushNoteSnapshot } from "@/lib/notes-client";
@@ -122,8 +121,6 @@ export default function DashboardNoteRoute() {
     };
   }, [id, refreshNotes, telemetry]);
 
-  const contentLength = useMemo(() => text.trim().length, [text]);
-
   if (loading) {
     return <div className="p-6">Loading note...</div>;
   }
@@ -133,13 +130,13 @@ export default function DashboardNoteRoute() {
   }
 
   return (
-    <div className="grid h-full grid-cols-1 gap-4 p-4 xl:grid-cols-2">
+    <div className="flex h-full flex-col gap-4 p-4">
       <Card className="h-full min-h-0">
         <CardHeader>
-          <CardTitle>Editor</CardTitle>
-          <CardDescription>{contentLength} characters</CardDescription>
+          <CardTitle>Edit note</CardTitle>
+          <CardDescription>Write in the editor. Rename from the sidebar menu.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[calc(100%-72px)] overflow-auto p-0">
+        <CardContent className="overflow-auto p-0">
           <RichEditor
             value={text}
             onChange={(next) => {
@@ -161,16 +158,6 @@ export default function DashboardNoteRoute() {
               telemetry.push(captured);
             }}
           />
-        </CardContent>
-      </Card>
-
-      <Card className="h-full min-h-0">
-        <CardHeader>
-          <CardTitle>Viewer</CardTitle>
-          <CardDescription>Live markdown preview</CardDescription>
-        </CardHeader>
-        <CardContent className="h-[calc(100%-72px)] overflow-auto">
-          <Preview markdown={text} />
         </CardContent>
       </Card>
     </div>

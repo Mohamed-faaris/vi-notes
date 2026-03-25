@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@vi-notes/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@vi-notes/ui/components/dropdown-menu";
 import { Input } from "@vi-notes/ui/components/input";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { MoreVertical, PencilLine, PanelLeftOpen } from "lucide-react";
 
-import { ModeToggle } from "@/components/mode-toggle";
-import UserMenu from "@/components/user-menu";
 import { authClient } from "@/lib/auth-client";
 import { createNote, listNotes, renameNote, type NoteItem } from "@/lib/notes-client";
 
@@ -107,14 +113,6 @@ export default function DashboardLayout() {
   return (
     <div className="grid h-svh grid-cols-1 lg:grid-cols-[280px_1fr]">
       <aside className="border-r border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border p-3">
-          <h1 className="text-sm font-semibold">Notes</h1>
-          <div className="flex items-center gap-2">
-            <ModeToggle />
-            <UserMenu />
-          </div>
-        </div>
-
         <div className="p-3">
           <Button className="w-full" onClick={handleCreateNote} disabled={isCreating}>
             {isCreating ? "Creating..." : "Create New"}
@@ -126,7 +124,7 @@ export default function DashboardLayout() {
           ) : null}
         </div>
 
-        <div className="h-[calc(100svh-130px)] overflow-auto p-3">
+        <div className="h-[calc(100svh-84px)] overflow-auto p-3">
           <div className="space-y-2">
             {notes.map((note) => {
               const isActive = activeId === note.sessionId;
@@ -165,6 +163,43 @@ export default function DashboardLayout() {
                       <p className="text-xs text-muted-foreground">{new Date(note.startTime).toLocaleDateString()}</p>
                     </button>
                   )}
+                  {renamingId !== note.sessionId ? (
+                    <div className="mt-2 flex items-center justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="rounded-none"
+                        onClick={() => navigate(`/dashboard/notes/${note.sessionId}`)}
+                        aria-label={`Open ${note.title}`}
+                      >
+                        <PanelLeftOpen className="size-3.5" />
+                      </Button>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="inline-flex size-7 items-center justify-center rounded-none border border-transparent bg-transparent text-xs text-foreground outline-none transition-colors hover:bg-muted focus:bg-muted focus:outline-none" aria-label="Note actions">
+                          <MoreVertical className="size-3.5" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" sideOffset={6}>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              setRenamingId(note.sessionId);
+                              setRenameValue(note.title);
+                            }}
+                          >
+                            <PencilLine />
+                            Rename title
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={() => navigate(`/dashboard/notes/${note.sessionId}`)}
+                          >
+                            Open note
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
