@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@vi-notes/ui/components/button";
 import {
@@ -26,6 +26,7 @@ export default function DashboardLayout() {
   const [isCreating, setIsCreating] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const loadedSessionIdRef = useRef<string | null>(null);
 
   const isAdmin = (session?.user as Record<string, unknown> | undefined)?.role === "admin";
 
@@ -34,32 +35,35 @@ export default function DashboardLayout() {
     return match?.[1] ?? null;
   }, [location.pathname]);
 
-  async function refreshNotes() {
+  const refreshNotes = useCallback(async () => {
     try {
-      console.log("[dashboard] loading notes for session", session?.user?.id);
       const data = await listNotes();
-      console.log("[dashboard] loaded notes", data.length);
       setNotes(data);
     } catch (error) {
-      console.error("[dashboard] failed to load notes", error);
       const message = error instanceof Error ? error.message : "Failed to load notes";
       toast.error(message);
     }
-  }
+  }, [session?.user?.id]);
 
-  console.log("[dashboard] render", { loading: isPending, notes: notes.length, activeId, path: location.pathname });
+  const sessionId = session?.user?.id ?? null;
 
   useEffect(() => {
     if (!session && !isPending) {
-      console.warn("[dashboard] no session, redirecting to login");
       navigate("/login");
       return;
     }
 
-    if (session) {
+    if (sessionId && loadedSessionIdRef.current !== sessionId) {
+      loadedSessionIdRef.current = sessionId;
       void refreshNotes();
     }
-  }, [session, isPending, navigate]);
+  }, [session, sessionId, isPending, navigate, refreshNotes]);
+
+  useEffect(() => {
+    if (!sessionId) {
+      loadedSessionIdRef.current = null;
+    }
+  }, [sessionId]);
 
   useEffect(() => {
     const isDashboardRoot = location.pathname === "/dashboard" || location.pathname === "/dashboard/";

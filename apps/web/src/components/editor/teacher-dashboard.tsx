@@ -29,27 +29,21 @@ export function TeacherDashboard({ text, events, snapshots }: TeacherDashboardPr
     <div className="grid gap-4 md:grid-cols-2">
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Highlighted Text Viewer</CardTitle>
-          <CardDescription>Paste: yellow background, suspicious: red underline.</CardDescription>
+          <CardTitle>Telemetry</CardTitle>
+          <CardDescription>Quick suspicion snapshot for this session.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="whitespace-pre-wrap rounded border border-input p-3 text-sm leading-6">
-            {highlighted.length === 0
-              ? "Start writing to generate highlights."
-              : highlighted.map((segment) => (
-                  <span
-                    key={`${segment.start}-${segment.end}-${segment.type}`}
-                    className={
-                      segment.type === "paste"
-                        ? "bg-yellow-200/80 text-black"
-                        : segment.type === "flagged"
-                          ? "underline decoration-red-600 decoration-2 underline-offset-2"
-                          : ""
-                    }
-                  >
-                    {segment.text}
-                  </span>
-                ))}
+        <CardContent className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Suspicion score</p>
+            <p className="text-2xl font-semibold">{detection.score.toFixed(2)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Flags</p>
+            <p className="text-2xl font-semibold">{detection.flags.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Status</p>
+            <p className="text-2xl font-semibold">{detection.flags.length === 0 ? "Clean" : "Review"}</p>
           </div>
         </CardContent>
       </Card>

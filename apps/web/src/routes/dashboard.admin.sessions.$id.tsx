@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
 import { Link, useParams } from "react-router";
 
-import { Preview } from "@/components/editor/preview";
 import { TeacherDashboard } from "@/components/editor/teacher-dashboard";
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
 import { getAdminSession } from "@/lib/notes-client";
@@ -69,15 +68,10 @@ export default function AdminSessionDetailRoute() {
       <Card>
         <CardHeader>
           <CardTitle>Final Content</CardTitle>
-          <CardDescription>Rendered markdown from latest snapshot.</CardDescription>
+          <CardDescription>Session text and analysis.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Preview markdown={text} />
-        </CardContent>
-        <CardContent>
-          <p>
-            {text}
-          </p>
+        <CardContent className="min-h-[60svh] overflow-auto">
+          <p className="whitespace-pre-wrap text-sm leading-6">{text}</p>
         </CardContent>
       </Card>
 
