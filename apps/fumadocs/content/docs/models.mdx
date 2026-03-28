@@ -1,0 +1,34 @@
+---
+title: Models
+description: What database models are and how we use them.
+---
+
+## In this project
+
+This project has two main model files in `packages/db/src/models/`:
+
+### auth.model.ts
+
+Auth-related models for user identity and sessions:
+
+- **User**: profile data (`_id`, `name`, `email`, `image`, timestamps)
+- **Session**: active login sessions (`token`, `expiresAt`, `userId`)
+- **Account**: linked auth providers (Google, GitHub, email/password)
+- **Verification**: email/OTP/password reset tokens
+
+These map to MongoDB collections: `user`, `session`, `account`, `verification`
+
+### writing-session.model.ts
+
+The main app model for tracking notes:
+
+- **WritingSession**: stores note activity
+  - `sessionId`: unique note identifier
+  - `userId`: owner reference
+  - `title`: note title
+  - `events`: editor actions (`insert`, `delete`, `paste`)
+  - `snapshots`: saved text states at points in time
+  - `startTime` / `endTime`: session timing
+
+Maps to the `writing_session` collection in MongoDB.
+

@@ -1,0 +1,162 @@
+---
+title: VI Notes - Setup
+description: Set up the project with Node.js or Bun.
+---
+
+## Recommended: Bun
+
+Bun is the best default for this repo because it installs fast, runs the package manager, and executes scripts in one tool.
+
+### Install Bun
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+**Windows PowerShell:**
+
+```powershell
+irm bun.sh/install.ps1 | iex
+```
+
+**Windows with Scoop:**
+
+```powershell
+scoop install bun
+```
+
+**Windows with Chocolatey:**
+
+```powershell
+choco install bun
+```
+
+**Fedora / RHEL:**
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt install -y curl
+curl -fsSL https://bun.sh/install | bash
+```
+
+### Run with Bun
+
+```bash
+bun install
+bun run dev
+```
+
+---
+
+## Using Node.js
+
+If you prefer Node, install Node first, then install dependencies and run the app.
+
+### Install Node
+
+**macOS with Homebrew:**
+
+```bash
+brew install node
+```
+
+**macOS / Linux with nvm:**
+
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+nvm install --lts
+nvm use --lts
+```
+
+**Windows with winget:**
+
+```powershell
+winget install OpenJS.NodeJS.LTS
+```
+
+**Windows with Scoop:**
+
+```powershell
+scoop install nodejs-lts
+```
+
+**Windows with Chocolatey:**
+
+```powershell
+choco install nodejs-lts
+```
+
+**Ubuntu / Debian:**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Fedora:**
+
+```bash
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+```
+
+### Run with npm
+
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## Suggested flow
+
+1. Install Bun if possible.
+2. Run `bun install`.
+3. Start the app with `bun run dev`.
+4. Use Node only if your environment does not support Bun yet.
+
+---
+
+## Removing Turborepo
+
+If you want to drop Turborepo and use plain package scripts:
+
+1. Remove turbo from dependencies:
+
+```bash
+bun remove turbo
+# or
+npm remove turbo
+```
+
+2. Delete the turbo config file:
+
+```bash
+rm turbo.json
+```
+
+3. Update `package.json` scripts to run each app directly:
+
+```json
+{
+  "scripts": {
+    "dev": "bun run --filter=web dev",
+    "build": "bun run --filter=server build && bun run --filter=web build"
+  }
+}
+```
+
+4. Run individual apps:
+
+```bash
+bun run --filter=web dev
+bun run --filter=server dev
+```
