@@ -12,6 +12,7 @@ import { Skeleton } from "@vi-notes/ui/components/skeleton";
 import { Link, useNavigate } from "react-router";
 
 import { authClient } from "@/lib/auth-client";
+import { ModeToggle } from "./mode-toggle";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -37,6 +38,11 @@ export default function UserMenu() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="p-0">
+            <ModeToggle />
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {

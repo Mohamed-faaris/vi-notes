@@ -17,6 +17,7 @@
     "@react-router/node": "^7.10.1",
     "@react-router/serve": "^7.10.1",
     "@tanstack/react-form": "^1.28.0",
+    "@vercel/react-router": "^1.2.6",
     "@vi-notes/auth": "workspace:*",
     "@vi-notes/env": "workspace:*",
     "@vi-notes/ui": "workspace:*",
