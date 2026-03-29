@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "bundle": "bun build ./src/index.ts --outdir dist --target node --format esm",
+    "bundle": "bun build ./src/index.ts --outdir dist --target node --format esm --external express",
     "start": "bun dist/index.js"
   },
   "dependencies": {
