@@ -5,7 +5,8 @@
   "scripts": {
     "check-types": "tsc -b",
     "dev": "bun --watch src/index.ts",
-    "start": "bun src/index.ts"
+    "bundle": "bun build ./src/index.ts --outdir dist --target node --format esm --external express",
+    "start": "bun dist/index.js"
   },
   "dependencies": {
     "@vi-notes/auth": "workspace:*",
