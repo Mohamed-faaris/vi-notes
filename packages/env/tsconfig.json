@@ -1,3 +1,6 @@
 {
-  "extends": "@vi-notes/config/tsconfig.base.json"
+  "extends": "@vi-notes/config/tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  }
 }
