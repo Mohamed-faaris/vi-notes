@@ -9,7 +9,7 @@ build
 *.tsbuildinfo
 
 # Vercel
-apps/server/api
+api
 
 # Environment variables
 .env

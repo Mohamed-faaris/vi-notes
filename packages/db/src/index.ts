@@ -1,10 +1,18 @@
 import { env } from "@vi-notes/env/server";
 import mongoose from "mongoose";
 
-await mongoose.connect(env.DATABASE_URL).catch((error) => {
-  console.log("Error connecting to database:", error);
-});
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let client: any = null;
 
-const client = mongoose.connection.getClient().db(env.DATABASE_NAME);
+export async function connectDB() {
+  if (client) return client;
+  
+  await mongoose.connect(env.DATABASE_URL).catch((error) => {
+    console.log("Error connecting to database:", error);
+  });
+  
+  client = mongoose.connection.db;
+  return client;
+}
 
 export { client };

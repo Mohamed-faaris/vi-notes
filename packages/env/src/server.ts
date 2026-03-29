@@ -1,6 +1,17 @@
 import "dotenv/config";
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
+import { existsSync } from "fs";
+import { resolve } from "path";
+
+if (process.env.NODE_ENV !== "production") {
+  const projectRoot = resolve(__dirname, "../../..");
+  const envPath = resolve(projectRoot, ".env");
+
+  if (!existsSync(envPath)) {
+    throw new Error(`.env file not found at ${envPath}. Please create one based on .env.example or .env.template.`);
+  }
+}
 
 export const env = createEnv({
   server: {

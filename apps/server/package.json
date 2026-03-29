@@ -3,14 +3,15 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && mv ../../api/index.mjs ../../api/index.js",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
-    "start": "bun run api/index.mjs",
-    "vercel-build": "tsdown"
+    "start": "bun run api/index.js",
+    "vercel-build": "tsdown && mv ../../api/index.mjs ../../api/index.js"
   },
   "dependencies": {
+    "@vercel/express": "^0.1.65",
     "@vi-notes/auth": "workspace:*",
     "@vi-notes/db": "workspace:*",
     "@vi-notes/env": "workspace:*",

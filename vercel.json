@@ -4,8 +4,9 @@
   "outputDirectory": "apps/web/build/client",
   "framework": null,
   "routes": [
-    { "src": "^/api/(.*)$", "dest": "apps/server/api/$1" },
-    { "src": "^/api$", "dest": "apps/server/api/index.mjs" },
+    { "src": "^/api-try$", "dest": "/api/try.js" },
+    { "src": "^/api/test$", "dest": "/api/test.js" },
+    { "src": "^/api(/.*)?$", "dest": "/api/index.js" },
     { "src": "^/docs$", "dest": "apps/fumadocs/build/client/index.html" },
     { "src": "^/docs/(.*)$", "dest": "apps/fumadocs/build/client/$1" },
     { "handle": "filesystem" },
