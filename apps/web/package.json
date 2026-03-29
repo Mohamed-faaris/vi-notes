@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
+    "build": "vite build",
+    "dev": "vite",
+    "start": "vite preview",
     "typecheck": "react-router typegen && tsc",
     "generate-pwa-assets": "pwa-assets-generator"
   },
