@@ -1,5 +1,0 @@
-{
-  "buildCommand": "bun install && turbo run build --filter=web",
-  "installCommand": "bun install",
-  "outputDirectory": "apps/web/build/client"
-}
