@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 
 import { env } from "@vi-notes/env/server";
+import { client } from "@vi-notes/db";
 
 import { adminRouter } from "./routes/admin.routes";
 import { authRouter } from "./routes/auth.routes";
@@ -27,6 +28,15 @@ export function createApp(): express.Application {
 
   app.get("/", (_req, res) => {
     res.status(200).send("OK");
+  });
+
+  app.get("/api/health", async (_req, res) => {
+    try {
+      const dbState = await client.command({ ping: 1 });
+      res.status(200).json({ status: "ok", db: "connected", ping: dbState });
+    } catch (error) {
+      res.status(503).json({ status: "error", db: "disconnected", error: String(error) });
+    }
   });
 
   return app;
