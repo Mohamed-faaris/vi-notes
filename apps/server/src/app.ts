@@ -13,7 +13,7 @@ export function createApp(): express.Application {
   app.use(
     cors({
       origin: env.CORS_ORIGIN,
-      methods: ["GET", "POST", "PATCH", "OPTIONS"],
+      methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
     }),
@@ -22,8 +22,8 @@ export function createApp(): express.Application {
   app.use(express.json());
 
   app.use("/api/auth", authRouter);
-  app.use("/notes", notesRouter);
-  app.use("/admin", adminRouter);
+  app.use("/api/notes", notesRouter);
+  app.use("/api/admin", adminRouter);
 
   app.get("/", (_req, res) => {
     res.status(200).send("OK");

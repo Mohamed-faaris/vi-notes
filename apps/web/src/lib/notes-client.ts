@@ -1,6 +1,15 @@
+import axios from "axios";
 import { env } from "@vi-notes/env/web";
 
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
+
+const api = axios.create({
+  baseURL: `${env.VITE_SERVER_URL}/api`,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export type NoteItem = {
   sessionId: string;
@@ -15,88 +24,35 @@ export type NoteDetail = NoteItem & {
   snapshots: Snapshot[];
 };
 
-async function parseResponse<T>(response: Response) {
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Request failed (${response.status}): ${errorText}`);
-  }
-
-  return (await response.json()) as T;
-}
-
 export async function listNotes() {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const data = await parseResponse<{ notes: NoteItem[] }>(response);
+  const { data } = await api.get<{ notes: NoteItem[] }>("/notes");
   return data.notes;
 }
 
 export async function createNote(title?: string) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ title }),
-  });
-
-  return parseResponse<{ sessionId: string; title: string; startTime: number }>(response);
+  const { data } = await api.post<{ sessionId: string; title: string; startTime: number }>("/notes", { title });
+  return data;
 }
 
 export async function getNote(sessionId: string) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes/${sessionId}`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const data = await parseResponse<{ note: NoteDetail }>(response);
+  const { data } = await api.get<{ note: NoteDetail }>(`/notes/${sessionId}`);
   return data.note;
 }
 
 export async function renameNote(sessionId: string, title: string) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes/${sessionId}/title`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ title }),
-  });
-
-  await parseResponse<{ ok: true }>(response);
+  await api.patch(`/notes/${sessionId}/title`, { title });
 }
 
 export async function pushNoteEvent(sessionId: string, event: EditorEvent) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes/${sessionId}/event`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ event }),
-  });
-
-  await parseResponse<{ ok: true }>(response);
+  await api.post(`/notes/${sessionId}/event`, { event });
 }
 
 export async function pushNoteSnapshot(sessionId: string, snapshot: Snapshot) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes/${sessionId}/snapshot`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ snapshot }),
-  });
-
-  await parseResponse<{ ok: true }>(response);
+  await api.post(`/notes/${sessionId}/snapshot`, { snapshot });
 }
 
 export async function endNote(sessionId: string, endTime: number) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/notes/${sessionId}/end`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ endTime }),
-  });
-
-  await parseResponse<{ ok: true }>(response);
+  await api.post(`/notes/${sessionId}/end`, { endTime });
 }
 
 export type AdminSessionItem = {
@@ -108,21 +64,11 @@ export type AdminSessionItem = {
 };
 
 export async function listAdminSessions() {
-  const response = await fetch(`${env.VITE_SERVER_URL}/admin/sessions`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const data = await parseResponse<{ sessions: AdminSessionItem[] }>(response);
+  const { data } = await api.get<{ sessions: AdminSessionItem[] }>("/admin/sessions");
   return data.sessions;
 }
 
 export async function getAdminSession(sessionId: string) {
-  const response = await fetch(`${env.VITE_SERVER_URL}/admin/sessions/${sessionId}`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  const data = await parseResponse<{ session: NoteDetail }>(response);
+  const { data } = await api.get<{ session: NoteDetail }>(`/admin/sessions/${sessionId}`);
   return data.session;
 }

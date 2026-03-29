@@ -21,6 +21,7 @@
     "@vi-notes/auth": "workspace:*",
     "@vi-notes/env": "workspace:*",
     "@vi-notes/ui": "workspace:*",
+    "axios": "^1.14.0",
     "better-auth": "catalog:",
     "dompurify": "^3.2.6",
     "dotenv": "catalog:",
