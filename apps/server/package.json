@@ -3,12 +3,9 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsdown",
     "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun run --hot src/index.ts",
-    "start": "bun run dist/index.mjs",
-    "vercel-build": "tsdown"
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts"
   },
   "dependencies": {
     "@vi-notes/auth": "workspace:*",
@@ -27,7 +24,6 @@
     "@types/express": "^5.0.1",
     "@types/nodemailer": "^6.4.17",
     "@vi-notes/config": "workspace:*",
-    "tsdown": "^0.16.5",
     "typescript": "^5"
   }
 }
