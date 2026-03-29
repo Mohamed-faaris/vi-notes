@@ -1,0 +1,12 @@
+{
+  "installCommand": "bun install",
+  "buildCommand": "bun run build",
+  "outputDirectory": "apps/web/build/client",
+  "framework": null,
+  "routes": [
+    { "src": "^/api/(.*)$", "dest": "apps/server/api/$1" },
+    { "src": "^/api$", "dest": "apps/server/api/index.mjs" },
+    { "src": "^/docs/?(.*)$", "dest": "apps/fumadocs/build/client/$1" },
+    { "src": "^/(.*)$", "dest": "apps/web/build/client/$1" }
+  ]
+}
