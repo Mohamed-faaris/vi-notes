@@ -29,6 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script src="https://tweakcn.com/live-preview.min.js"></script>
       </head>
       <body>
         {children}

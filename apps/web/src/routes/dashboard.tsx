@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { MoreVertical, PencilLine, PanelLeftOpen } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
+import UserMenu from "@/components/user-menu";
+import { ModeToggle } from "@/components/mode-toggle";
 import { createNote, listNotes, renameNote, type NoteItem } from "@/lib/notes-client";
 
 import type { DashboardOutletContext } from "./dashboard-context";
@@ -128,7 +130,7 @@ export default function DashboardLayout() {
           ) : null}
         </div>
 
-        <div className="h-[calc(100svh-84px)] overflow-auto p-3">
+        <div className="h-[calc(100svh-132px)] overflow-auto p-3">
           <div className="space-y-2">
             {notes.map((note) => {
               const isActive = activeId === note.sessionId;
@@ -207,6 +209,13 @@ export default function DashboardLayout() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        <div className="border-t border-border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <ModeToggle />
+            <UserMenu />
           </div>
         </div>
       </aside>
