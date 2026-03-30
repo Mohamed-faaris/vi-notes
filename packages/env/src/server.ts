@@ -5,8 +5,7 @@ const requiredEnvVars = [
   "DATABASE_URL",
   "DATABASE_NAME",
   "BETTER_AUTH_SECRET",
-  "BETTER_AUTH_URL",
-  "CORS_ORIGIN",
+  "CORS_ORIGINS",
   "SMTP_HOST",
   "SMTP_PORT",
   "SMTP_USER",
@@ -26,8 +25,16 @@ const serverEnvSchema = z.object({
   DATABASE_URL: z.string().min(1),
   DATABASE_NAME: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
-  BETTER_AUTH_URL: z.string().url(),
-  CORS_ORIGIN: z.string().url(),
+  CORS_ORIGINS: z
+    .string()
+    .min(1)
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    )
+    .pipe(z.array(z.string().url()).min(1)),
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.coerce.number().int().positive(),
   SMTP_USER: z.string().email(),

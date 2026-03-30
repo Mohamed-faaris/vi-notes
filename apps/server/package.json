@@ -5,7 +5,7 @@
   "scripts": {
     "check-types": "tsc -b",
     "dev": "bun --watch src/index.ts",
-    "bundle": "bun build ./src/index.ts --outdir dist --target node --format esm --external express",
+    "bundle": "bun build ./src/index.ts --outdir dist --target node --format esm --external express --external nodemailer",
     "start": "bun dist/index.js"
   },
   "dependencies": {

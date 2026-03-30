@@ -4,7 +4,7 @@ import { env } from "@vi-notes/env/web";
 import type { EditorEvent, Snapshot } from "@/components/editor/types";
 
 const api = axios.create({
-  baseURL: `${env.VITE_SERVER_URL}/api`,
+  baseURL: env.VITE_SERVER_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
