@@ -3,6 +3,6 @@ import { emailOTPClient, magicLinkClient, multiSessionClient } from "better-auth
 import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
-  baseURL: env.VITE_SERVER_URL,
+  baseURL: `${env.VITE_SERVER_URL}/auth`,
   plugins: [emailOTPClient(), magicLinkClient(), multiSessionClient()],
 });

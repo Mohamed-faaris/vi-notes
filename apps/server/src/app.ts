@@ -6,6 +6,8 @@ import { env } from "@vi-notes/env/server";
 import { adminRouter } from "./routes/admin.routes";
 import { authRouter } from "./routes/auth.routes";
 import { notesRouter } from "./routes/notes.routes";
+import { time, timeStamp } from "node:console";
+import { client } from "@vi-notes/db";
 
 export function createApp(): express.Application {
   const app = express();
@@ -25,8 +27,16 @@ export function createApp(): express.Application {
   app.use("/api/notes", notesRouter);
   app.use("/api/admin", adminRouter);
 
+  app.all("/api/health", (_req, res) => {
+    res.status(200).json({
+       status: "ok",
+       db:client.stats(),
+       timeStamp: timeStamp(),
+       });
+  });
+
   app.get("/", (_req, res) => {
-    res.status(200).send("OK");
+    res.status(200).send("Welcome to the Vi Notes API!, visit <a href=\"/api/health\">/api/health</a> for health check");
   });
 
   return app;
