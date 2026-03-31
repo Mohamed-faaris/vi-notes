@@ -5,10 +5,11 @@ import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/mantine/style.css";
 import { useTheme } from "../theme-provider";
+import type { EditorEventType } from "./types";
 
 type RichEditorProps = {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, meta?: { type?: EditorEventType }) => void;
 };
 
 export function RichEditor({ value, onChange }: RichEditorProps) {
@@ -17,6 +18,7 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
 
   const syncingFromValue = useRef(false);
   const lastValueRef = useRef<string | null>(null);
+  const pendingInputTypeRef = useRef<EditorEventType | null>(null);
 
   useEffect(() => {
     if (!editor) return;
@@ -56,14 +58,22 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
           <span>Block editor</span>
           <span>{wordCount.toLocaleString()} words</span>
         </div>
-        <div className="overflow-hidden rounded-lg border border-border/60 bg-background">
+        <div
+          className="overflow-hidden rounded-lg border border-border/60 bg-background"
+          onPasteCapture={() => {
+            console.log("[editor] paste detected");
+            pendingInputTypeRef.current = "paste";
+          }}
+        >
           <BlockNoteView
             editor={editor}
             onChange={() => {
               if (syncingFromValue.current) return;
               const markdown = editor.blocksToMarkdownLossy(editor.document);
               lastValueRef.current = markdown;
-              onChange(markdown);
+              const type = pendingInputTypeRef.current ?? "insert";
+              pendingInputTypeRef.current = null;
+              onChange(markdown, { type });
             }}
             theme={resolvedTheme === "dark" ? "dark" : "light"}
           />

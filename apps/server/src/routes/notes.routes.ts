@@ -1,13 +1,11 @@
 import { Router } from "express";
 
 import {
-  addNoteEventController,
-  addNoteSnapshotController,
   createNoteController,
-  endNoteController,
   getNoteController,
   getNoteAnalysisController,
   getNotesController,
+  ingestNoteController,
   renameNoteController,
 } from "../controllers/notes.controller";
 
@@ -17,7 +15,5 @@ notesRouter.get("/", getNotesController);
 notesRouter.post("/", createNoteController);
 notesRouter.get("/:id", getNoteController);
 notesRouter.get("/:id/analysis", getNoteAnalysisController);
+notesRouter.post("/:id/ingest", ingestNoteController);
 notesRouter.patch("/:id/title", renameNoteController);
-notesRouter.post("/:id/event", addNoteEventController);
-notesRouter.post("/:id/snapshot", addNoteSnapshotController);
-notesRouter.post("/:id/end", endNoteController);

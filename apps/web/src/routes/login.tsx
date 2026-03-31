@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@vi-notes/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
@@ -11,12 +11,27 @@ import { authClient } from "@/lib/auth-client";
 
 export default function LoginRoute() {
   const navigate = useNavigate();
+  const { data: session, isPending } = authClient.useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
   const [mode, setMode] = useState<"sign-in" | "sign-up" | "otp" | "magic">("sign-in");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (session && !isPending) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [session, isPending, navigate]);
+
+  if (isPending) {
+    return <div className="flex min-h-svh items-center justify-center p-4">Loading...</div>;
+  }
+
+  if (session) {
+    return null;
+  }
 
   async function submit() {
     setLoading(true);

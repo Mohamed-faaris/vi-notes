@@ -18,6 +18,7 @@ export function analyzeSession(events: SessionEvent[], snapshots: SessionSnapsho
   const typedChars = events.filter((event) => event.type === "insert").reduce((sum, event) => sum + event.length, 0);
   const pastedChars = events.filter((event) => event.type === "paste").reduce((sum, event) => sum + event.length, 0);
   const deletedChars = events.filter((event) => event.type === "delete").reduce((sum, event) => sum + event.length, 0);
+  const pasteCount = events.filter((event) => event.type === "paste").length;
 
   const totalDurationMs = Math.max(1, (events.at(-1)?.t ?? 0) - (events[0]?.t ?? 0));
   const avgSpeed = (typedChars + pastedChars) / (totalDurationMs / 1000);
@@ -70,6 +71,7 @@ export function analyzeSession(events: SessionEvent[], snapshots: SessionSnapsho
       events: events.length,
       snapshots: snapshots.length,
       finalTextLength: finalText.length,
+      pasteCount,
     },
   };
 }

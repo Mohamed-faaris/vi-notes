@@ -1,4 +1,9 @@
 import { WritingSession } from "@vi-notes/db/models/writing-session.model";
+import { ingestItemSchema } from "../schemas/note.schemas";
+
+import type { z } from "zod";
+
+type IngestItem = z.infer<typeof ingestItemSchema>;
 
 export async function listUserNotes(userId: string) {
   return WritingSession.find({ userId })
@@ -15,6 +20,7 @@ export async function createNote(input: { sessionId: string; userId: string; tit
     startTime: input.startTime,
     events: [],
     snapshots: [],
+    lastSeq: 0,
   });
 }
 
@@ -39,16 +45,69 @@ export async function renameNote(sessionId: string, title: string) {
   await WritingSession.updateOne({ sessionId }, { $set: { title } });
 }
 
-export async function appendNoteEvent(sessionId: string, event: unknown) {
-  await WritingSession.updateOne({ sessionId }, { $push: { events: event } });
-}
+export async function ingestNoteItems(sessionId: string, userId: string, items: IngestItem[]) {
+  const access = await assertNoteOwner(sessionId, userId);
+  if (!access.ok) {
+    return access;
+  }
 
-export async function appendNoteSnapshot(sessionId: string, snapshot: unknown) {
-  await WritingSession.updateOne({ sessionId }, { $push: { snapshots: snapshot } });
-}
+  const note = access.note;
+  const seen = new Set<string>();
+  const ordered = [...items].sort((a, b) => a.seq - b.seq);
 
-export async function endNote(sessionId: string, endTime: number) {
-  await WritingSession.updateOne({ sessionId }, { $set: { endTime } });
+  const accepted: IngestItem[] = [];
+  let lastSeq = note.lastSeq ?? 0;
+
+  for (const item of ordered) {
+    if (seen.has(item.id)) {
+      continue;
+    }
+    seen.add(item.id);
+
+    if (item.seq <= lastSeq) {
+      continue;
+    }
+
+    accepted.push(item);
+    lastSeq = item.seq;
+  }
+
+  const events = accepted.filter((item) => item.kind === "event").map((item) => ({
+    id: item.id,
+    seq: item.seq,
+    clientTs: item.clientTs,
+    ...item.event,
+  }));
+
+  const snapshots = accepted.filter((item) => item.kind === "snapshot").map((item) => ({
+    id: item.id,
+    seq: item.seq,
+    clientTs: item.clientTs,
+    ...item.snapshot,
+  }));
+
+  const endTime = accepted.find((item) => item.kind === "end")?.endTime;
+
+  await WritingSession.updateOne(
+    { sessionId },
+    {
+      $push: {
+        events: { $each: events },
+        snapshots: { $each: snapshots },
+      },
+      $set: {
+        lastSeq,
+        ...(typeof endTime === "number" ? { endTime } : {}),
+      },
+    },
+  );
+
+  return {
+    ok: true as const,
+    acceptedCount: accepted.length,
+    duplicateCount: items.length - accepted.length,
+    lastSeq,
+  };
 }
 
 export async function listAllSessions() {

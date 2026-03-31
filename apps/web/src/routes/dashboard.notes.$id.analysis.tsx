@@ -88,6 +88,12 @@ export default function DashboardNoteAnalysisRoute() {
             <CardTitle>{analysis.summary.snapshots}</CardTitle>
           </CardHeader>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Pastes</CardDescription>
+            <CardTitle>{analysis.summary.pasteCount}</CardTitle>
+          </CardHeader>
+        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

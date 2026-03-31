@@ -24,6 +24,36 @@ export type NoteDetail = NoteItem & {
   snapshots: Snapshot[];
 };
 
+export type IngestItem =
+  | {
+      kind: "event";
+      id: string;
+      seq: number;
+      clientTs: number;
+      event: EditorEvent;
+    }
+  | {
+      kind: "snapshot";
+      id: string;
+      seq: number;
+      clientTs: number;
+      snapshot: Snapshot;
+    }
+  | {
+      kind: "end";
+      id: string;
+      seq: number;
+      clientTs: number;
+      endTime: number;
+    };
+
+export type IngestResponse = {
+  ok: true;
+  acceptedCount: number;
+  duplicateCount: number;
+  lastSeq: number;
+};
+
 export type NoteAnalysis = {
   metrics: {
     avgSpeed: number;
@@ -40,6 +70,7 @@ export type NoteAnalysis = {
     events: number;
     snapshots: number;
     finalTextLength: number;
+    pasteCount: number;
   };
 };
 
@@ -63,20 +94,13 @@ export async function getNoteAnalysis(sessionId: string) {
   return data;
 }
 
+export async function ingestNote(sessionId: string, items: IngestItem[]) {
+  const { data } = await api.post<IngestResponse>(`/notes/${sessionId}/ingest`, { items });
+  return data;
+}
+
 export async function renameNote(sessionId: string, title: string) {
   await api.patch(`/notes/${sessionId}/title`, { title });
-}
-
-export async function pushNoteEvent(sessionId: string, event: EditorEvent) {
-  await api.post(`/notes/${sessionId}/event`, { event });
-}
-
-export async function pushNoteSnapshot(sessionId: string, snapshot: Snapshot) {
-  await api.post(`/notes/${sessionId}/snapshot`, { snapshot });
-}
-
-export async function endNote(sessionId: string, endTime: number) {
-  await api.post(`/notes/${sessionId}/end`, { endTime });
 }
 
 export type AdminSessionItem = {

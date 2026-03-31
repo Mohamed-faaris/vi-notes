@@ -1,20 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
-import { Outlet, useLocation, useOutletContext, useParams } from "react-router";
+import { Outlet, useLocation, useParams } from "react-router";
 
 import { buildEditorEvent } from "@/components/editor/capture";
 import { RichEditor } from "@/components/editor/rich-editor";
-import type { EditorEvent, Snapshot } from "@/components/editor/types";
-import { endNote, getNote, pushNoteEvent, pushNoteSnapshot } from "@/lib/notes-client";
-import { useTelemetryFlush } from "@/hooks/use-telemetry-flush";
-
-import type { DashboardOutletContext } from "./dashboard-context";
+import type { EditorEvent } from "@/components/editor/types";
+import { getNote } from "@/lib/notes-client";
+import { useNoteIngest } from "@/hooks/use-note-ingest";
 
 export default function DashboardNoteRoute() {
   const { id } = useParams();
   const location = useLocation();
-  const { refreshNotes } = useOutletContext<DashboardOutletContext>();
   const [text, setText] = useState("");
   const [events, setEvents] = useState<EditorEvent[]>([]);
   const [dirtyText, setDirtyText] = useState("");
@@ -23,17 +20,14 @@ export default function DashboardNoteRoute() {
   const [error, setError] = useState<string | null>(null);
   const textRef = useRef(text);
   const lastSnapshotTextRef = useRef<string | null>(null);
-
-  const { push: pushTelemetry, flush: flushTelemetry } = useTelemetryFlush<EditorEvent>({
-    debounceMs: 1000,
-    maxBuffer: 50,
-    intervalMs: 5000,
-    onFlush: async (batch) => {
-      await Promise.all(batch.map((event) => (id ? pushNoteEvent(id, event) : Promise.resolve())));
-    },
-  });
+  const { enqueueEvent, enqueueSnapshot, enqueueEnd, flush } = useNoteIngest(id ?? null);
+  const isAnalysisRoute = location.pathname.endsWith("/analysis");
 
   useEffect(() => {
+    if (isAnalysisRoute) {
+      return;
+    }
+
     if (!id) {
       return;
     }
@@ -45,10 +39,8 @@ export default function DashboardNoteRoute() {
       }
 
       lastSnapshotTextRef.current = currentText;
-      const snapshot: Snapshot = { t: Date.now(), text: currentText };
-      void pushNoteSnapshot(id, snapshot)
-        .then(() => refreshNotes())
-        .catch(() => undefined);
+      const now = Date.now();
+      enqueueSnapshot({ kind: "snapshot", id: crypto.randomUUID(), clientTs: now, snapshot: { t: now, text: currentText } });
     };
 
     const handleBlur = () => {
@@ -74,7 +66,7 @@ export default function DashboardNoteRoute() {
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [id, refreshNotes]);
+  }, [id]);
 
   useEffect(() => {
     textRef.current = text;
@@ -116,10 +108,8 @@ export default function DashboardNoteRoute() {
       const currentText = textRef.current;
       if (currentText !== lastSnapshotTextRef.current) {
         lastSnapshotTextRef.current = currentText;
-        const snapshot: Snapshot = { t: Date.now(), text: currentText };
-        void pushNoteSnapshot(id, snapshot)
-          .then(() => refreshNotes())
-          .catch(() => undefined);
+        const now = Date.now();
+        enqueueSnapshot({ kind: "snapshot", id: crypto.randomUUID(), clientTs: now, snapshot: { t: now, text: currentText } });
       }
     }, 10000);
 
@@ -128,17 +118,15 @@ export default function DashboardNoteRoute() {
       const currentText = textRef.current;
       if (currentText !== lastSnapshotTextRef.current) {
         lastSnapshotTextRef.current = currentText;
-        void pushNoteSnapshot(id, { t: endTime, text: currentText })
-          .then(() => refreshNotes())
-          .catch(() => undefined);
+        enqueueSnapshot({ kind: "snapshot", id: crypto.randomUUID(), clientTs: endTime, snapshot: { t: endTime, text: currentText } });
       }
-      void endNote(id, endTime).catch(() => undefined);
       window.clearInterval(interval);
-      flushTelemetry().catch(() => undefined);
+      enqueueEnd({ kind: "end", id: crypto.randomUUID(), clientTs: endTime, endTime });
+      void flush();
     };
-  }, [id, refreshNotes, flushTelemetry]);
+  }, [id, enqueueEnd, enqueueSnapshot, flush, isAnalysisRoute]);
 
-  if (location.pathname.endsWith("/analysis")) {
+  if (isAnalysisRoute) {
     return <Outlet />;
   }
 
@@ -160,23 +148,26 @@ export default function DashboardNoteRoute() {
         <CardContent className="overflow-auto p-0">
           <RichEditor
             value={text}
-            onChange={(next) => {
+            onChange={(next, meta) => {
               setText(next);
               setDirtyText(next);
               const now = Date.now();
+              const type = meta?.type ?? "insert";
+              const delta = type === "delete" ? next.length - text.length : next.length - text.length;
+              const length = type === "paste" ? next.length : Math.max(0, next.length - text.length);
               const captured = buildEditorEvent({
-                type: "insert",
+                type,
                 now,
                 lastEventTime,
                 start: 0,
                 end: next.length,
-                length: next.length,
-                delta: next.length - text.length,
+                length,
+                delta,
               });
 
               setEvents((prev) => [...prev, captured]);
               setLastEventTime(now);
-              pushTelemetry(captured);
+              enqueueEvent({ kind: "event", id: crypto.randomUUID(), clientTs: now, event: captured });
             }}
           />
         </CardContent>

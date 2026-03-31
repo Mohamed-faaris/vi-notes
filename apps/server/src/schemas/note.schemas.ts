@@ -34,3 +34,33 @@ export const noteSnapshotSchema = z.object({
 export const endNoteSchema = z.object({
   endTime: z.number().int().positive(),
 });
+
+export const ingestEventSchema = z.object({
+  kind: z.literal("event"),
+  id: z.string().min(1),
+  seq: z.number().int().nonnegative(),
+  clientTs: z.number().int().positive(),
+  event: editorEventSchema,
+});
+
+export const ingestSnapshotSchema = z.object({
+  kind: z.literal("snapshot"),
+  id: z.string().min(1),
+  seq: z.number().int().nonnegative(),
+  clientTs: z.number().int().positive(),
+  snapshot: snapshotSchema,
+});
+
+export const ingestEndSchema = z.object({
+  kind: z.literal("end"),
+  id: z.string().min(1),
+  seq: z.number().int().nonnegative(),
+  clientTs: z.number().int().positive(),
+  endTime: z.number().int().positive(),
+});
+
+export const ingestItemSchema = z.union([ingestEventSchema, ingestSnapshotSchema, ingestEndSchema]);
+
+export const ingestPayloadSchema = z.object({
+  items: z.array(ingestItemSchema).min(1),
+});

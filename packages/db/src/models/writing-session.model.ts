@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 const { Schema, model, models } = mongoose;
 
 type WritingEvent = {
+  id: string;
+  seq: number;
+  clientTs: number;
   t: number;
   type: "insert" | "delete" | "paste";
   start: number;
@@ -13,6 +16,9 @@ type WritingEvent = {
 };
 
 type SessionSnapshot = {
+  id: string;
+  seq: number;
+  clientTs: number;
   t: number;
   text: string;
 };
@@ -25,10 +31,14 @@ type WritingSessionDocument = {
   snapshots: SessionSnapshot[];
   startTime: number;
   endTime?: number;
+  lastSeq: number;
 };
 
 const writingEventSchema = new Schema(
   {
+    id: { type: String, required: true },
+    seq: { type: Number, required: true, min: 0 },
+    clientTs: { type: Number, required: true },
     t: { type: Number, required: true },
     type: { type: String, enum: ["insert", "delete", "paste"], required: true },
     start: { type: Number, required: true, min: 0 },
@@ -42,6 +52,9 @@ const writingEventSchema = new Schema(
 
 const snapshotSchema = new Schema(
   {
+    id: { type: String, required: true },
+    seq: { type: Number, required: true, min: 0 },
+    clientTs: { type: Number, required: true },
     t: { type: Number, required: true },
     text: { type: String, required: true },
   },
@@ -57,6 +70,7 @@ const writingSessionSchema = new Schema(
     snapshots: { type: [snapshotSchema], default: [] },
     startTime: { type: Number, required: true },
     endTime: { type: Number },
+    lastSeq: { type: Number, required: true, default: 0 },
   },
   {
     collection: "writing_session",
