@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@vi-notes/ui/components/card";
-import { useOutletContext, useParams } from "react-router";
+import { Outlet, useLocation, useOutletContext, useParams } from "react-router";
 
 import { buildEditorEvent } from "@/components/editor/capture";
 import { RichEditor } from "@/components/editor/rich-editor";
@@ -13,6 +13,7 @@ import type { DashboardOutletContext } from "./dashboard-context";
 
 export default function DashboardNoteRoute() {
   const { id } = useParams();
+  const location = useLocation();
   const { refreshNotes } = useOutletContext<DashboardOutletContext>();
   const [text, setText] = useState("");
   const [events, setEvents] = useState<EditorEvent[]>([]);
@@ -21,8 +22,9 @@ export default function DashboardNoteRoute() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const textRef = useRef(text);
+  const lastSnapshotTextRef = useRef<string | null>(null);
 
-  const telemetry = useTelemetryFlush<EditorEvent>({
+  const { push: pushTelemetry, flush: flushTelemetry } = useTelemetryFlush<EditorEvent>({
     debounceMs: 1000,
     maxBuffer: 50,
     intervalMs: 5000,
@@ -37,7 +39,13 @@ export default function DashboardNoteRoute() {
     }
 
     const handleSnapshot = () => {
-      const snapshot: Snapshot = { t: Date.now(), text: textRef.current };
+      const currentText = textRef.current;
+      if (currentText === lastSnapshotTextRef.current) {
+        return;
+      }
+
+      lastSnapshotTextRef.current = currentText;
+      const snapshot: Snapshot = { t: Date.now(), text: currentText };
       void pushNoteSnapshot(id, snapshot)
         .then(() => refreshNotes())
         .catch(() => undefined);
@@ -88,6 +96,7 @@ export default function DashboardNoteRoute() {
       .then((note) => {
         const latest = note.snapshots.at(-1)?.text ?? "";
         setText(latest);
+        lastSnapshotTextRef.current = latest;
         setEvents(note.events ?? []);
       })
       .catch((loadError: Error) => {
@@ -104,22 +113,34 @@ export default function DashboardNoteRoute() {
     }
 
     const interval = window.setInterval(() => {
-      const snapshot: Snapshot = { t: Date.now(), text: textRef.current };
-      void pushNoteSnapshot(id, snapshot)
-        .then(() => refreshNotes())
-        .catch(() => undefined);
+      const currentText = textRef.current;
+      if (currentText !== lastSnapshotTextRef.current) {
+        lastSnapshotTextRef.current = currentText;
+        const snapshot: Snapshot = { t: Date.now(), text: currentText };
+        void pushNoteSnapshot(id, snapshot)
+          .then(() => refreshNotes())
+          .catch(() => undefined);
+      }
     }, 10000);
 
     return () => {
       const endTime = Date.now();
-      void pushNoteSnapshot(id, { t: endTime, text: textRef.current })
-        .then(() => refreshNotes())
-        .catch(() => undefined);
+      const currentText = textRef.current;
+      if (currentText !== lastSnapshotTextRef.current) {
+        lastSnapshotTextRef.current = currentText;
+        void pushNoteSnapshot(id, { t: endTime, text: currentText })
+          .then(() => refreshNotes())
+          .catch(() => undefined);
+      }
       void endNote(id, endTime).catch(() => undefined);
       window.clearInterval(interval);
-      telemetry.flush().catch(() => undefined);
+      flushTelemetry().catch(() => undefined);
     };
-  }, [id, refreshNotes, telemetry]);
+  }, [id, refreshNotes, flushTelemetry]);
+
+  if (location.pathname.endsWith("/analysis")) {
+    return <Outlet />;
+  }
 
   if (loading) {
     return <div className="p-6">Loading note...</div>;
@@ -155,7 +176,7 @@ export default function DashboardNoteRoute() {
 
               setEvents((prev) => [...prev, captured]);
               setLastEventTime(now);
-              telemetry.push(captured);
+              pushTelemetry(captured);
             }}
           />
         </CardContent>

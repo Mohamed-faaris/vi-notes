@@ -24,6 +24,25 @@ export type NoteDetail = NoteItem & {
   snapshots: Snapshot[];
 };
 
+export type NoteAnalysis = {
+  metrics: {
+    avgSpeed: number;
+    pasteRatio: number;
+    pauseCount: number;
+    editDensity: number;
+    burstCount: number;
+  };
+  detection: {
+    score: number;
+    flags: string[];
+  };
+  summary: {
+    events: number;
+    snapshots: number;
+    finalTextLength: number;
+  };
+};
+
 export async function listNotes() {
   const { data } = await api.get<{ notes: NoteItem[] }>("/notes");
   return data.notes;
@@ -37,6 +56,11 @@ export async function createNote(title?: string) {
 export async function getNote(sessionId: string) {
   const { data } = await api.get<{ note: NoteDetail }>(`/notes/${sessionId}`);
   return data.note;
+}
+
+export async function getNoteAnalysis(sessionId: string) {
+  const { data } = await api.get<{ note: NoteDetail; analysis: NoteAnalysis }>(`/notes/${sessionId}/analysis`);
+  return data;
 }
 
 export async function renameNote(sessionId: string, title: string) {

@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@vi-notes/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@vi-notes/ui/components/dropdown-menu";
 import { Input } from "@vi-notes/ui/components/input";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
-import { MoreVertical, PencilLine, PanelLeftOpen } from "lucide-react";
+import { BarChart3, PencilLine, PanelLeftOpen } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import UserMenu from "@/components/user-menu";
@@ -170,7 +163,7 @@ export default function DashboardLayout() {
                     </button>
                   )}
                   {renamingId !== note.sessionId ? (
-                    <div className="mt-2 flex items-center justify-end gap-1">
+                    <div className="mt-2 flex flex-wrap items-center justify-end gap-1">
                       <Button
                         type="button"
                         variant="ghost"
@@ -178,32 +171,35 @@ export default function DashboardLayout() {
                         className="rounded-none"
                         onClick={() => navigate(`/dashboard/notes/${note.sessionId}`)}
                         aria-label={`Open ${note.title}`}
+                        title="Open note"
                       >
                         <PanelLeftOpen className="size-3.5" />
                       </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="inline-flex size-7 items-center justify-center rounded-none border border-transparent bg-transparent text-xs text-foreground outline-none transition-colors hover:bg-muted focus:bg-muted focus:outline-none" aria-label="Note actions">
-                          <MoreVertical className="size-3.5" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" sideOffset={6}>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              setRenamingId(note.sessionId);
-                              setRenameValue(note.title);
-                            }}
-                          >
-                            <PencilLine />
-                            Rename title
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onSelect={() => navigate(`/dashboard/notes/${note.sessionId}`)}
-                          >
-                            Open note
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="rounded-none"
+                        onClick={() => {
+                          setRenamingId(note.sessionId);
+                          setRenameValue(note.title);
+                        }}
+                        aria-label={`Rename ${note.title}`}
+                        title="Rename note"
+                      >
+                        <PencilLine className="size-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="rounded-none"
+                        onClick={() => navigate(`/dashboard/notes/${note.sessionId}/analysis`)}
+                        aria-label={`Open analysis for ${note.title}`}
+                        title="Open analysis"
+                      >
+                        <BarChart3 className="size-3.5" />
+                      </Button>
                     </div>
                   ) : null}
                 </div>

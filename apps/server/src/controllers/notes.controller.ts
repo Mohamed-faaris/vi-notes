@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { createNoteSchema, endNoteSchema, noteEventSchema, noteSnapshotSchema, renameNoteSchema } from "../schemas/note.schemas";
 import { appendNoteEvent, appendNoteSnapshot, assertNoteOwner, createNote, endNote, listUserNotes, renameNote } from "../services/notes.service";
 import { requireUser } from "../middleware/auth";
+import { analyzeSession } from "../lib/session-analysis";
 
 function getRouteParam(value: unknown) {
   if (typeof value === "string" && value.length > 0) {
@@ -63,6 +64,29 @@ export async function getNoteController(req: Request, res: Response) {
   }
 
   return res.status(200).json({ note: access.note });
+}
+
+export async function getNoteAnalysisController(req: Request, res: Response) {
+  const session = await requireUser(req, res);
+  if (!session) {
+    return;
+  }
+
+  const noteId = getRouteParam(req.params.id);
+  if (!noteId) {
+    return res.status(400).json({ error: "Invalid note id" });
+  }
+
+  const access = await assertNoteOwner(noteId, session.user.id);
+  if (!access.ok) {
+    return res.status(access.status).json({ error: access.error });
+  }
+
+  const analysis = analyzeSession(access.note.events ?? [], access.note.snapshots ?? []);
+  return res.status(200).json({
+    note: access.note,
+    analysis,
+  });
 }
 
 export async function renameNoteController(req: Request, res: Response) {
