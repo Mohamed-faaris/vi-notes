@@ -88,23 +88,18 @@ export default function DashboardNoteAnalysisRoute() {
             <CardTitle>{analysis.summary.snapshots}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Pastes</CardDescription>
-            <CardTitle>{analysis.summary.pasteCount}</CardTitle>
-          </CardHeader>
-        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Behavior</CardTitle>
+            <CardTitle>Dilog</CardTitle>
             <CardDescription>Derived from note activity.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center justify-between"><span>Avg speed</span><span>{analysis.metrics.avgSpeed.toFixed(2)} cps</span></div>
             <div className="flex items-center justify-between"><span>Paste ratio</span><span>{(analysis.metrics.pasteRatio * 100).toFixed(1)}%</span></div>
+            <div className="flex items-center justify-between"><span>Pastes</span><span>{analysis.summary.pasteCount}</span></div>
             <div className="flex items-center justify-between"><span>Pauses</span><span>{analysis.metrics.pauseCount}</span></div>
             <div className="flex items-center justify-between"><span>Edit density</span><span>{(analysis.metrics.editDensity * 100).toFixed(1)}%</span></div>
             <div className="flex items-center justify-between"><span>Burst inserts</span><span>{analysis.metrics.burstCount}</span></div>
