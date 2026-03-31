@@ -2,7 +2,14 @@
 
 **Vi-Notes** is an authenticity verification platform designed to distinguish genuine human-written content from AI-generated or AI-assisted text. The system focuses on analyzing **writing behavior** alongside **statistical and linguistic characteristics** of the text to establish reliable authorship verification.
 
-This repository represents the **design and conceptual foundation** for the Vi-Notes system.
+This repository represents the **design and conceptual foundation** for the Vi-Notes system
+---
+
+## Deployment Links
+
+- Docs: <https://fumadocs-nu.vercel.app>
+- Web App: <https://web-vi-notes.vercel.app/>
+- API: <https://api-vi-notes.vercel.app/>
 
 ---
 
@@ -11,6 +18,7 @@ This repository represents the **design and conceptual foundation** for the Vi-N
 With the widespread availability of AI writing tools, verifying true human authorship has become increasingly challenging. Most existing detection methods rely primarily on textual analysis, which can be inconsistent and easy to bypass.
 
 Vi-Notes approaches this problem by combining:
+
 - Behavioral signals from the writing process
 - Statistical analysis of the written content
 - Correlation between how content is written and what is written
@@ -20,6 +28,7 @@ Vi-Notes approaches this problem by combining:
 ## Core Idea
 
 Human writing naturally includes:
+
 - Variable typing speeds
 - Pauses during thinking
 - Revisions during idea formation
@@ -35,28 +44,33 @@ Vi-Notes is designed to capture and analyze these characteristics to assess auth
 ## Key Features
 
 ### Writing Session Monitoring
+
 - Capture keystroke timing metadata (not raw key content)
 - Track pauses, deletions, edits, and writing flow
 - Detect pasted or externally inserted text blocks
 
 ### Behavioral Pattern Analysis
+
 - Pause distribution before sentences and paragraphs
 - Typing speed variance
 - Revision frequency relative to text complexity
 - Micro-pauses around punctuation and structural boundaries
 
 ### Textual Statistical Analysis
+
 - Sentence length variation
 - Vocabulary diversity metrics
 - Stylistic consistency analysis
 - Linguistic irregularities typical of human writing
 
 ### Cross-Verification Engine
+
 - Correlate keyboard behavior with text evolution
 - Identify mismatches between behavioral data and content
 - Flag suspicious uniformity patterns
 
 ### Authenticity Reports
+
 - Confidence score for human authorship
 - Highlighted suspicious segments
 - Supporting behavioral and textual indicators
@@ -67,20 +81,24 @@ Vi-Notes is designed to capture and analyze these characteristics to assess auth
 ## Tech Stack (MERN Architecture)
 
 ### Frontend
+
 - React
 - TypeScript
 - Electron for desktop-level keyboard event access
 
 ### Backend
+
 - Node.js
 - Express.js
 - RESTful APIs for session handling and analysis
 
 ### Database
+
 - MongoDB
 - Encrypted storage for writing sessions, keystroke metadata, and reports
 
 ### Machine Learning
+
 - TensorFlow / PyTorch
 - Supervised learning for human vs AI-assisted writing
 - Unsupervised anomaly detection
@@ -112,17 +130,10 @@ Vi-Notes is designed with privacy-first principles:
 ## Repository Scope
 
 This repository currently serves as:
+
 - A design reference
 - A research and experimentation space
 - A foundation for future MERN-based implementation
-
----
-
-## Deployment Links
-
-- Docs: https://fumadocs-nu.vercel.app
-- Web App: https://web-vi-notes.vercel.app/
-- API: https://api-vi-notes.vercel.app/
 
 ---
 
