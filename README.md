@@ -118,6 +118,14 @@ This repository currently serves as:
 
 ---
 
+## Deployment Links
+
+- Docs: https://fumadocs-nu.vercel.app
+- Web App: https://web-vi-notes.vercel.app/
+- API: https://api-vi-notes.vercel.app/
+
+---
+
 ## Contributing
 
 Contributions are welcome, especially for **feature requests and their implementation**.  
