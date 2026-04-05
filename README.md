@@ -1,149 +1,84 @@
-# Vi-Notes
+# VI Notes
 
-**Vi-Notes** is an authenticity verification platform designed to distinguish genuine human-written content from AI-generated or AI-assisted text. The system focuses on analyzing **writing behavior** alongside **statistical and linguistic characteristics** of the text to establish reliable authorship verification.
-
-This repository represents the **design and conceptual foundation** for the Vi-Notes system
----
-
-## Deployment Links
+VI Notes is a Bun-first monorepo for note taking, writing-session tracking, auth, and docs.
 
 - Docs: <https://fumadocs-nu.vercel.app>
 - Web App: <https://web-vi-notes.vercel.app/>
 - API: <https://api-vi-notes.vercel.app/>
 
----
+## What’s In The Repo
 
-## Motivation
+- `apps/web` - main web app
+- `apps/server` - API server
+- `apps/fumadocs` - docs site
+- `packages/auth` - Better Auth setup
+- `packages/emailer` - shared email transport
+- `packages/db` - MongoDB models and client
+- `packages/env` - typed environment variables
+- `packages/ui` - shared UI components and styles
 
-With the widespread availability of AI writing tools, verifying true human authorship has become increasingly challenging. Most existing detection methods rely primarily on textual analysis, which can be inconsistent and easy to bypass.
+## Stack
 
-Vi-Notes approaches this problem by combining:
+- Bun
+- Turborepo
+- React Router
+- Better Auth
+- MongoDB / Mongoose
+- Fumadocs
+- shadcn/ui
+- T3 Env
 
-- Behavioral signals from the writing process
-- Statistical analysis of the written content
-- Correlation between how content is written and what is written
+## Getting Started
 
----
+1. Install Bun.
+2. Copy `.env.example` to `.env` and fill in the values.
+3. Install dependencies.
 
-## Core Idea
+Need the full setup flow? See the [docs](https://fumadocs-nu.vercel.app).
 
-Human writing naturally includes:
+```bash
+bun install
+```
 
-- Variable typing speeds
-- Pauses during thinking
-- Revisions during idea formation
-- Irregular sentence structures
-- A relationship between content complexity and editing frequency
+4. Start development.
 
-AI-generated or pasted text often lacks these behavioral signatures.
+```bash
+bun run dev
+```
 
-Vi-Notes is designed to capture and analyze these characteristics to assess authorship authenticity.
+## Environment
 
----
+The app requires a few server-side values:
 
-## Key Features
+- `DATABASE_URL`
+- `DATABASE_NAME`
+- `BETTER_AUTH_SECRET`
+- `CORS_ORIGINS`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `GMAIL_USER`
+- `GMAIL_PASS`
+- `NODE_ENV`
 
-### Writing Session Monitoring
+The web app also uses:
 
-- Capture keystroke timing metadata (not raw key content)
-- Track pauses, deletions, edits, and writing flow
-- Detect pasted or externally inserted text blocks
+- `VITE_SERVER_URL`
 
-### Behavioral Pattern Analysis
+See `.env.example` for the default local values.
 
-- Pause distribution before sentences and paragraphs
-- Typing speed variance
-- Revision frequency relative to text complexity
-- Micro-pauses around punctuation and structural boundaries
+## Scripts
 
-### Textual Statistical Analysis
+```bash
+bun run dev
+bun run build
+bun run start
+bun run check-types
+bun run dev:web
+bun run dev:server
+```
 
-- Sentence length variation
-- Vocabulary diversity metrics
-- Stylistic consistency analysis
-- Linguistic irregularities typical of human writing
+## Notes
 
-### Cross-Verification Engine
-
-- Correlate keyboard behavior with text evolution
-- Identify mismatches between behavioral data and content
-- Flag suspicious uniformity patterns
-
-### Authenticity Reports
-
-- Confidence score for human authorship
-- Highlighted suspicious segments
-- Supporting behavioral and textual indicators
-- Shareable verification summaries
-
----
-
-## Tech Stack (MERN Architecture)
-
-### Frontend
-
-- React
-- TypeScript
-- Electron for desktop-level keyboard event access
-
-### Backend
-
-- Node.js
-- Express.js
-- RESTful APIs for session handling and analysis
-
-### Database
-
-- MongoDB
-- Encrypted storage for writing sessions, keystroke metadata, and reports
-
-### Machine Learning
-
-- TensorFlow / PyTorch
-- Supervised learning for human vs AI-assisted writing
-- Unsupervised anomaly detection
-- NLP-based statistical signature analysis
-
----
-
-## Privacy & Ethics
-
-Vi-Notes is designed with privacy-first principles:
-
-- No storage of raw keystroke content
-- Only timing, frequency, and structural metadata is collected
-- Encrypted data storage
-- User-controlled session tracking
-- Monitoring limited strictly to active writing sessions
-
----
-
-## Project Goals
-
-- Restore trust in written content authenticity
-- Differentiate between human-written, AI-assisted, and AI-generated text
-- Adapt detection methods as AI writing tools evolve
-- Maintain ethical, transparent, and privacy-conscious verification
-
----
-
-## Repository Scope
-
-This repository currently serves as:
-
-- A design reference
-- A research and experimentation space
-- A foundation for future MERN-based implementation
-
----
-
-## Contributing
-
-Contributions are welcome, especially for **feature requests and their implementation**.  
-If you are interested in working on an existing feature request or proposing a new one, please open or comment on an issue to start the discussion.
-
----
-
-## License
-
-This project is licensed under the MIT License.
+- Use Bun for installs and local scripts.
+- Auth and email are shared through workspace packages instead of being duplicated in apps.
