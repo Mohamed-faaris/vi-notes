@@ -1,4 +1,10 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@source "../../../apps/**/*.{ts,tsx}";
+
+/* it is weird */
+@source "../**/*.{ts,tsx}";
 
 @custom-variant dark (&:is(.dark *));
 
