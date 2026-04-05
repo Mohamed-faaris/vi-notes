@@ -1,0 +1,97 @@
+---
+title: Stack Overview
+description: The core tools and libraries that make this repo easy to build and maintain.
+---
+
+## Stack Overview
+
+This repo works because the tooling stays opinionated but narrow. Each piece solves one problem well, and the combination gives a setup that is fast to start, easy to scale, and hard to overcomplicate.
+
+The [Vibe repo](https://github.com/vicharanashala/vibe) inspired this structure: one CLI surface, one workspace, cached builds, and enough abstraction to stay sane without turning into a framework maze.
+
+## Turborepo
+
+Turborepo is the orchestration layer.
+
+- one command to drive multiple apps
+- cached builds and task reuse
+- better DX for local work and CI
+- a clean way to keep app and package boundaries without manual scripting
+
+This is the part that makes the workspace feel like a product instead of a pile of packages.
+
+Docs: https://turbo.build/repo/docs
+
+## Better Auth
+
+Auth is not the place to hand-roll policy unless you have a very specific reason.
+
+You can build login, password reset, email verification, OAuth, cookie config, origin checks, redirects, and rate limits yourself. The problem is that each of those details becomes a security and maintenance surface, and the surface grows exponentially as features pile up.
+
+Better Auth gives us a library that is built for that job and stays aligned with current auth patterns and vulnerabilities.
+
+- Docs: https://www.better-auth.com/docs
+- Repo usage: `better-auth`
+
+## BlockNote
+
+BlockNote is the editor choice because it feels close to the Notion-style experience I like.
+
+- open source
+- collaborative editing support
+- AI-friendly workflows
+- good fit for a rich text editor inside React apps
+
+It already shows up in the web app as `@blocknote/core`, `@blocknote/react`, and `@blocknote/mantine`.
+
+Docs: https://www.blocknotejs.org/
+
+## Fumadocs
+
+Fumadocs is the docs layer.
+
+- MDX support for rich docs content
+- React Router support in this stack
+- easy to keep docs close to the code they describe
+
+That matters here because this docs app is part of the repo, not a separate publishing system.
+
+Docs: https://fumadocs.dev/
+
+## shadcn/ui
+
+shadcn/ui is the UI base because it ships components as source, not as a black box package.
+
+- fully customizable
+- local ownership of components
+- theme control through CSS variables
+- easy to adapt without fighting a design system you do not control
+
+If you want to tune the theme, `tweakcn` is a useful companion.
+
+- Docs: https://ui.shadcn.com/
+- Theme tooling: https://tweakcn.com/
+
+## Mongoose
+
+Mongoose is the database layer in this repo.
+
+- schema-based modeling for MongoDB
+- predictable validation and transforms
+- easier shared model definitions across apps and packages
+
+This is the part that keeps the data layer explicit instead of scattered.
+
+Docs: https://mongoosejs.com/docs/
+
+## T3 Env
+
+T3 Env is used for type-safe environment variables.
+
+- validates env at startup
+- keeps config typed
+- avoids stringly-typed runtime surprises
+
+It fits this repo because env handling should fail fast, not drift silently.
+
+Docs: https://env.t3.gg/

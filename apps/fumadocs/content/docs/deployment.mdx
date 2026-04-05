@@ -1,0 +1,72 @@
+---
+title: Deployment
+description: Deploy the stack anywhere Node.js is supported, with Vercel as the default path.
+---
+
+## Overview
+
+This project can be deployed anywhere Node.js runs.
+
+The repo is built around standard runtime and workspace patterns, so the deployment target is mostly a packaging decision, not an architecture rewrite.
+
+## Recommended: Vercel
+
+Vercel is the easiest path for this repo.
+
+- good monorepo support
+- clean CLI flow
+- easy preview deployments
+- minimal setup overhead
+
+The repo also uses `vercel.json` in `apps/server/` to help CLI deployments use the right install and build commands.
+
+Docs: https://vercel.com/docs/monorepos/turborepo
+
+### By CLI
+
+1. Install the CLI.
+
+```bash
+npm i -g vercel
+```
+
+2. Log in.
+
+```bash
+vercel login
+```
+
+3. Link the project.
+
+```bash
+vercel link --repo
+```
+
+4. Deploy.
+
+```bash
+vercel deploy --prod
+```
+
+This keeps the whole flow in the terminal.
+
+## By Web
+
+Use the Vercel dashboard if you want the simplest no-terminal flow.
+
+1. Import the repository.
+2. Set the project root.
+3. Confirm the build and install settings.
+4. Deploy the project.
+5. Repeat per app or service.
+
+## By Instances
+
+You can also deploy to your own server or container instance.
+
+- install Node.js
+- install dependencies
+- run the build step
+- start the server process with a process manager, container runtime, or system service
+
+This path gives you full control, but you also own uptime, logs, restarts, and environment management.
