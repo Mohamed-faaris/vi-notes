@@ -80,17 +80,32 @@ Copy `.env.example` to `.env` at the repo root, then fill in the values for your
 
 The app validates env on startup, which is exactly what you want. If a required value is missing, it should fail immediately instead of breaking later in auth, database, or email code.
 
-### Server Values
+### Database
 
 - `DATABASE_URL`: get this from MongoDB Atlas or your local MongoDB server.
 - `DATABASE_NAME`: the database name you want the app to use.
+
+### Auth
+
 - `BETTER_AUTH_SECRET`: generate a long random secret, at least 32 characters.
 - `CORS_ORIGINS`: comma-separated frontend origins, including local dev and deployed domains.
+
+Get `BETTER_AUTH_SECRET` from a secure secret generator, not from a reusable password.
+
+`CORS_ORIGINS` should include the exact domains that are allowed to talk to the API.
+
+### Email
+
 - `SMTP_HOST`: your mail provider SMTP host.
 - `SMTP_PORT`: the SMTP port from that provider.
 - `SMTP_USER`: the SMTP username, usually your email address.
 - `GMAIL_USER`: the sender email address.
 - `GMAIL_PASS`: an app password or SMTP password.
+
+These values usually come from your mail provider settings or Google app-password setup.
+
+### Runtime
+
 - `NODE_ENV`: `development` locally, `production` in deploys.
 
 ### Client Values
@@ -104,7 +119,7 @@ The app validates env on startup, which is exactly what you want. If a required 
 - `DATABASE_URL` and `DATABASE_NAME` decide where data is stored.
 - `BETTER_AUTH_SECRET` protects auth sessions and token signing.
 - `CORS_ORIGINS` prevents random sites from calling your API.
-- SMTP values are required for password reset, verification, and other auth emails.
+- SMTP values are required for password reset, verification, and other email flows.
 - `VITE_SERVER_URL` keeps the frontend pointed at the correct backend.
 
 Do not commit real secrets.

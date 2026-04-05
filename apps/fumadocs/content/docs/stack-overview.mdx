@@ -20,6 +20,22 @@ Turborepo is the orchestration layer.
 
 This is the part that makes the workspace feel like a product instead of a pile of packages.
 
+![Turborepo TUI](/assets/turbo-repo-TUI.png)
+
+### Common Packages
+
+The `packages/` directory holds shared code that multiple apps depend on. This keeps things consistent across the web app, server, and any future services:
+
+| Package | Purpose |
+|---------|---------|
+| `@vi-notes/db` | Mongoose models and database connection - same data layer everywhere |
+| `@vi-notes/auth` | Better Auth configuration shared between web and server |
+| `@vi-notes/env` | Type-safe environment variables with T3 Env |
+| `@vi-notes/ui` | Shared shadcn/ui components and theme |
+| `@vi-notes/config` | Shared TypeScript and tooling configurations |
+
+Any change to a common package automatically propagates to all consuming apps. This is what makes the monorepo structure worth the complexity.
+
 Docs: https://turbo.build/repo/docs
 
 ## Better Auth

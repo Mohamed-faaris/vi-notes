@@ -1,34 +1,66 @@
 ---
-title: Models
-description: What database models are and how we use them.
+title: Models Reference
+description: Database models and schema definitions.
 ---
 
-## In this project
+## Overview
 
-This project has two main model files in `packages/db/src/models/`:
+Model files are located in `packages/db/src/models/`.
 
-### auth.model.ts
+---
 
-Auth-related models for user identity and sessions:
+## auth.model.ts
 
-- **User**: profile data (`_id`, `name`, `email`, `image`, timestamps)
-- **Session**: active login sessions (`token`, `expiresAt`, `userId`)
-- **Account**: linked auth providers (Google, GitHub, email/password)
-- **Verification**: email/OTP/password reset tokens
+Auth-related models for user identity and sessions (via Better Auth):
 
-These map to MongoDB collections: `user`, `session`, `account`, `verification`
+| Model | Collection | Fields |
+|-------|------------|--------|
+| **User** | `user` | `_id`, `name`, `email`, `emailVerified`, `image`, `createdAt`, `updatedAt` |
+| **Session** | `session` | `token`, `expiresAt`, `userId`, `ipAddress`, `userAgent`, `createdAt`, `updatedAt` |
+| **Account** | `account` | `accountId`, `providerId`, `userId`, `accessToken`, `refreshToken`, `idToken`, `password`, `scope`, timestamps |
+| **Verification** | `verification` | `identifier`, `value`, `expiresAt`, `createdAt`, `updatedAt` |
 
-### writing-session.model.ts
+---
 
-The main app model for tracking notes:
+## writing-session.model.ts
 
-- **WritingSession**: stores note activity
-  - `sessionId`: unique note identifier
-  - `userId`: owner reference
-  - `title`: note title
-  - `events`: editor actions (`insert`, `delete`, `paste`)
-  - `snapshots`: saved text states at points in time
-  - `startTime` / `endTime`: session timing
+The main app model for tracking writing sessions:
 
-Maps to the `writing_session` collection in MongoDB.
+**Collection:** `writing_session`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sessionId` | `string` | Unique note identifier (indexed) |
+| `userId` | `string` | Owner reference (indexed) |
+| `title` | `string` | Note title (default: "New Note") |
+| `events` | `WritingEvent[]` | Editor actions with timing data |
+| `snapshots` | `SessionSnapshot[]` | Saved text states |
+| `startTime` | `number` | Session start timestamp (ms) |
+| `endTime` | `number?` | Session end timestamp (optional) |
+| `lastSeq` | `number` | Last sequence number for events |
+
+### WritingEvent
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Event unique ID |
+| `seq` | `number` | Sequence number |
+| `clientTs` | `number` | Client timestamp |
+| `t` | `number` | Relative time |
+| `type` | `"insert" \| "delete" \| "paste"` | Event type |
+| `start` | `number` | Start position |
+| `end` | `number` | End position |
+| `length` | `number` | Content length |
+| `delta` | `number` | Change delta |
+| `delay` | `number` | Key press delay |
+
+### SessionSnapshot
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Snapshot ID |
+| `seq` | `number` | Sequence number |
+| `clientTs` | `number` | Client timestamp |
+| `t` | `number` | Relative time |
+| `text` | `string` | Saved text content |
 
