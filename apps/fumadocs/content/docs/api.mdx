@@ -1,0 +1,248 @@
+---
+title: API Reference
+description: Vi Notes API endpoints and health monitoring
+---
+
+Base URL: `https://api-vi-notes.vercel.app`
+
+For a live view of available endpoints, visit the [API root](https://api-vi-notes.vercel.app/).
+
+---
+
+## Health Check
+
+### GET /api/health
+
+Returns system health status with detailed metrics.
+
+**Response:**
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-04-06T03:00:00.000Z",
+  "uptime": {
+    "seconds": 86400,
+    "formatted": "1d 0h 0m 0s"
+  },
+  "memory": {
+    "used": "45.23 MB",
+    "total": "128.00 MB",
+    "rss": "156.50 MB",
+    "external": "12.34 MB"
+  },
+  "system": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 4,
+    "loadAvg": [1.23, 1.45, 1.12],
+    "freeMemory": "2.14 GB",
+    "totalMemory": "8.00 GB"
+  },
+  "database": {
+    "connected": true,
+    "collections": ["notes", "users"],
+    "dataSize": "1.23 MB",
+    "indexSize": "0.45 MB"
+  },
+  "environment": "production",
+  "version": "1.0.0"
+}
+```
+
+---
+
+## Authentication
+
+All `/api/notes` and `/api/admin` routes require authentication via Bearer token in the `Authorization` header.
+
+Authentication is handled by [Better Auth](https://www.better-auth.com/).
+
+---
+
+## Notes
+
+### GET /api/notes
+
+List all notes for the authenticated user.
+
+**Response:**
+
+```json
+{
+  "notes": [
+    {
+      "sessionId": "uuid",
+      "title": "My Note",
+      "userId": "user-uuid",
+      "startTime": 1234567890,
+      "events": [...],
+      "snapshots": [...]
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/notes
+
+Create a new note session.
+
+**Body:**
+
+```json
+{
+  "title": "My New Note"  // optional, defaults to "New Note"
+}
+```
+
+**Response:**
+
+```json
+{
+  "sessionId": "uuid",
+  "title": "My New Note",
+  "startTime": 1234567890
+}
+```
+
+---
+
+### GET /api/notes/:id
+
+Get a specific note by session ID.
+
+**Response:**
+
+```json
+{
+  "note": {
+    "sessionId": "uuid",
+    "title": "My Note",
+    "userId": "user-uuid",
+    "startTime": 1234567890,
+    "events": [...],
+    "snapshots": [...]
+  }
+}
+```
+
+---
+
+### GET /api/notes/:id/analysis
+
+Get computed writing analysis for a note session.
+
+**Response:**
+
+```json
+{
+  "note": { ... },
+  "analysis": {
+    "wordCount": 1200,
+    "charCount": 8500,
+    "duration": 3600,
+    "wordsPerMinute": 20
+  }
+}
+```
+
+---
+
+### POST /api/notes/:id/ingest
+
+Ingest editor events or snapshots into a note session.
+
+**Body:**
+
+```json
+{
+  "items": [
+    { "type": "event", "timestamp": 1234567890, "data": {...} }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "inserted": 15
+}
+```
+
+---
+
+### PATCH /api/notes/:id/title
+
+Rename an existing note.
+
+**Body:**
+
+```json
+{
+  "title": "New Title"
+}
+```
+
+**Response:**
+
+```json
+{
+  "ok": true
+}
+```
+
+---
+
+## Admin
+
+Admin routes require admin privileges.
+
+### GET /api/admin/sessions
+
+List all note sessions across all users.
+
+**Response:**
+
+```json
+{
+  "sessions": [...]
+}
+```
+
+---
+
+### GET /api/admin/sessions/:id
+
+Get any session by ID (admin access).
+
+---
+
+### GET /api/admin/sessions/:id/analysis
+
+Get analysis for any session (admin access).
+
+---
+
+## Errors
+
+All endpoints return standard HTTP status codes:
+
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request (validation error)
+- `401` - Unauthorized (authentication required)
+- `403` - Forbidden (insufficient permissions)
+- `404` - Not Found
+- `500` - Server Error
+
+Error responses include a message:
+
+```json
+{
+  "error": "Error message"
+}
+```
