@@ -144,8 +144,14 @@ export function createApp(): express.Application {
     <p class="subtitle">Note-taking with writing session analysis</p>
     
     <div class="links">
+      <a href="https://fumadocs-nu.vercel.app/docs/api" class="link-card" target="_blank">
+        <div class="link-text">
+          <div class="link-title">API Documentation</div>
+          <div class="link-desc">Full reference for all endpoints</div>
+        </div>
+        <span class="link-arrow">→</span>
+      </a>
       <a href="/api/health" class="link-card">
-        <span class="link-icon">H</span>
         <div class="link-text">
           <div class="link-title">Health Check</div>
           <div class="link-desc">System status and metrics</div>
