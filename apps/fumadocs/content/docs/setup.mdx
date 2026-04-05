@@ -1,11 +1,43 @@
 ---
 title: VI Notes - Setup
-description: Set up the project with Node.js or Bun.
+description: Set up the project with Bun first, Node.js as a fallback.
 ---
 
-## Recommended: Bun
+## Bun 
 
-Bun is the best default for this repo because it installs fast, runs the package manager, and executes scripts in one tool.
+Bun is the default for this repo.
+
+It is a runtime, package manager, and script runner in one binary, so the setup surface is smaller than a Node.js + npm stack. For this codebase, that is the point: fewer moving parts, faster installs, and less time spent waiting on tooling.
+
+Bun can run most Node.js projects with little or no code change, but it is not magic. If a package depends on Node-specific behavior, native addons, or a brittle install script, verify it before assuming parity.
+
+- Bun docs: https://bun.sh/docs
+- Package manager docs: https://bun.sh/docs/cli/install
+- Skip to [Node fallback](#node-fallback)
+
+## Why Bun Here
+
+- Fast installs and script execution.
+- One tool for install, run, and test workflows.
+- Bun is stricter about some install-time behavior, which is useful when you want fewer supply-chain surprises.
+
+## Supply Chain Risk
+
+Package install hooks are a real attack surface. If a dependency runs arbitrary code during install, that code runs before you have a chance to inspect the package in normal use.
+
+References:
+
+- npm lifecycle scripts: https://docs.npmjs.com/cli/v11/using-npm/scripts#life-cycle-scripts
+- npm dependency security: https://docs.npmjs.com/auditing-package-dependencies-for-security-vulnerabilities
+- Axios supply-chain incident writeup: https://socket.dev/blog/axios-supply-chain-attack
+
+## Node Fallback
+
+- Skip to [Node fallback](#node-fallback) 
+
+Node is the fallback, not the default.
+
+Use it if Bun is unavailable in your environment or you are debugging a Node-only issue.
 
 ### Install Bun
 
@@ -33,31 +65,16 @@ scoop install bun
 choco install bun
 ```
 
-**Fedora / RHEL:**
-
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
-
-**Ubuntu / Debian:**
-
-```bash
-sudo apt install -y curl
-curl -fsSL https://bun.sh/install | bash
-```
-
-### Run with Bun
+### Continue with Bun
 
 ```bash
 bun install
 bun run dev
+bun run build
+bun run check-types
 ```
 
 ---
-
-## Using Node.js
-
-If you prefer Node, install Node first, then install dependencies and run the app.
 
 ### Install Node
 
@@ -107,56 +124,11 @@ curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo dnf install -y nodejs
 ```
 
-### Run with npm
+### Continue with Node
 
 ```bash
 npm install
 npm run dev
-```
-
----
-
-## Suggested flow
-
-1. Install Bun if possible.
-2. Run `bun install`.
-3. Start the app with `bun run dev`.
-4. Use Node only if your environment does not support Bun yet.
-
----
-
-## Removing Turborepo
-
-If you want to drop Turborepo and use plain package scripts:
-
-1. Remove turbo from dependencies:
-
-```bash
-bun remove turbo
-# or
-npm remove turbo
-```
-
-2. Delete the turbo config file:
-
-```bash
-rm turbo.json
-```
-
-3. Update `package.json` scripts to run each app directly:
-
-```json
-{
-  "scripts": {
-    "dev": "bun run --filter=web dev",
-    "build": "bun run --filter=server build && bun run --filter=web build"
-  }
-}
-```
-
-4. Run individual apps:
-
-```bash
-bun run --filter=web dev
-bun run --filter=server dev
+npm run build
+npm run check-types
 ```
