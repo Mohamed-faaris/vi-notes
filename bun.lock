@@ -68,14 +68,6 @@
         "typescript": "^5",
       },
     },
-    "apps/server0": {
-      "name": "server0",
-      "dependencies": {
-        "@vi-notes/db": "workspace:*",
-        "@vi-notes/env": "workspace:*",
-        "express": "^5.1.0",
-      },
-    },
     "apps/web": {
       "name": "web",
       "dependencies": {
