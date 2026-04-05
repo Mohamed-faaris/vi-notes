@@ -11,19 +11,18 @@
   "dependencies": {
     "@vi-notes/auth": "workspace:*",
     "@vi-notes/db": "workspace:*",
+    "@vi-notes/emailer": "workspace:*",
     "@vi-notes/env": "workspace:*",
     "better-auth": "catalog:",
     "cors": "^2.8.5",
     "dotenv": "catalog:",
     "express": "^5.1.0",
-    "nodemailer": "^6.10.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
-    "@types/nodemailer": "^6.4.17",
     "@vi-notes/config": "workspace:*",
     "typescript": "^5"
   }

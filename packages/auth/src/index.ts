@@ -1,10 +1,9 @@
 import { client } from "@vi-notes/db";
 import { env } from "@vi-notes/env/server";
+import { sendEmail } from "@vi-notes/emailer";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP, magicLink, multiSession } from "better-auth/plugins";
-
-import { sendAuthEmail } from "./mailer";
 
 export const auth = betterAuth({
   database: mongodbAdapter(client),
@@ -20,7 +19,7 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
-      await sendAuthEmail(
+      await sendEmail(
         "Verify your email",
         user.email,
         `<p>Click the button below to verify your email address.</p><p><a href="${url}">Verify email</a></p>`,
@@ -37,7 +36,7 @@ export const auth = betterAuth({
   plugins: [
     emailOTP({
       sendVerificationOTP: async ({ email, otp, type }) => {
-        await sendAuthEmail(
+        await sendEmail(
           "Your verification code",
           email,
           `<p>Your OTP for <strong>${type}</strong> is:</p><h2 style="letter-spacing:2px;">${otp}</h2>`,
@@ -48,7 +47,7 @@ export const auth = betterAuth({
     }),
     magicLink({
       sendMagicLink: async ({ email, url }) => {
-        await sendAuthEmail(
+        await sendEmail(
           "Your magic sign-in link",
           email,
           `<p>Use this magic link to sign in:</p><p><a href="${url}">Sign in now</a></p>`,

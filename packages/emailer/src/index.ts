@@ -1,7 +1,7 @@
 import { env } from "@vi-notes/env/server";
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
+export const emailTransport = nodemailer.createTransport({
   host: env.SMTP_HOST,
   port: env.SMTP_PORT,
   secure: env.SMTP_PORT === 465,
@@ -13,11 +13,15 @@ const transporter = nodemailer.createTransport({
   debug: env.NODE_ENV !== "development",
 });
 
-export async function sendAuthEmail(subject: string, to: string, html: string) {
-  await transporter.sendMail({
+export async function sendEmail(subject: string, to: string, html: string) {
+  await emailTransport.sendMail({
     from: env.GMAIL_USER,
     to,
     subject,
     html,
   });
+}
+
+export async function verifyEmailTransport() {
+  await emailTransport.verify();
 }

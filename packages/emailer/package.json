@@ -1,24 +1,22 @@
 {
-  "name": "@vi-notes/auth",
+  "name": "@vi-notes/emailer",
+  "version": "0.0.0",
+  "private": true,
   "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
     }
   },
   "scripts": {},
   "dependencies": {
-    "@vi-notes/emailer": "workspace:*",
-    "@vi-notes/db": "workspace:*",
     "@vi-notes/env": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "nodemailer": "^6.10.1",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
     "@vi-notes/config": "workspace:*",
     "typescript": "^5"
   }
